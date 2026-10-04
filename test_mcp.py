@@ -133,6 +133,25 @@ class TestTransport(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(len(json.loads(out)), 2)
 
+class TestHealth(unittest.TestCase):
+    """/health must describe a live service in a shape a monitor can parse."""
+
+    def test_path_constant(self):
+        from http_server import HEALTH_PATH
+        self.assertEqual(HEALTH_PATH, "/health")
+
+    def test_payload_is_valid_json(self):
+        from http_server import __version__
+        body = json.dumps({"status": "ok", "service": "drift", "version": __version__})
+        parsed = json.loads(body)
+        self.assertEqual(parsed["status"], "ok")
+        self.assertEqual(parsed["service"], "drift")
+        self.assertTrue(parsed["version"])
+
+    def test_health_is_not_confused_with_mcp(self):
+        from http_server import HEALTH_PATH, MCP_PATH
+        self.assertNotEqual(HEALTH_PATH.rstrip("/"), MCP_PATH.rstrip("/"))
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

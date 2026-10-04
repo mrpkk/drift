@@ -12,6 +12,8 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from mcp_server import respond
 
 MCP_PATH = "/mcp"
+__version__ = "0.1.0"
+HEALTH_PATH = "/health"
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -23,6 +25,11 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(body)
 
     def do_POST(self) -> None:  # noqa: N802
+        if self.path.rstrip("/") == HEALTH_PATH:
+            self._send(200, json.dumps(
+                {"status": "ok", "service": "drift", "version": __version__},
+                ensure_ascii=False).encode())
+            return
         if self.path.rstrip("/") not in (MCP_PATH, ""):
             self._send(404, b'{"error":"not found"}')
             return
@@ -35,6 +42,11 @@ class Handler(BaseHTTPRequestHandler):
         self._send(status, body)
 
     def do_GET(self) -> None:  # noqa: N802
+        if self.path.rstrip("/") == HEALTH_PATH:
+            self._send(200, json.dumps(
+                {"status": "ok", "service": "drift", "version": __version__},
+                ensure_ascii=False).encode())
+            return
         if self.path.rstrip("/") in (MCP_PATH, ""):
             self._send(200, json.dumps(
                 {"server": "drift", "transport": "streamable-http", "path": MCP_PATH},
