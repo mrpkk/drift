@@ -1,6 +1,7 @@
 ---
 title: "Your agent's spending mandate is not being audience-checked"
 description: "In Google's AP2 Python SDK, verify_chain documents that it enforces expected_aud on the terminal hop. The check never runs for the tokens the SDK itself produces. Reproducer inside."
+permalink: /ap2-expected-aud-not-enforced/
 slug: ap2-expected-aud-not-enforced
 tags: [ai-agents, security, ap2, authorization, mcp]
 ---

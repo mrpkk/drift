@@ -1,6 +1,7 @@
 ---
 title: "Six ways an agent exceeds its mandate — and the check that stops each"
 description: "A mandate is checked once, at signature. Then the agent acts alone. Six concrete failure modes of mandate enforcement, in order of how often they matter, with the rule that catches each."
+permalink: /six-ways-an-agent-drifts/
 slug: six-ways-an-agent-drifts
 tags: [ai-agents, authorization, security, mcp, observability]
 ---
