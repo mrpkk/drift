@@ -1,5 +1,6 @@
 """Тесты MCP-протокола drift. python3 test_mcp.py"""
 import json
+import pathlib
 import unittest
 
 import mcp_server as S
@@ -269,6 +270,57 @@ class TestBindAddress(unittest.TestCase):
     def test_startup_is_not_silent(self):
         import http_server
         self.assertTrue(callable(http_server.log))
+
+class TestDistributionCompleteness(unittest.TestCase):
+    """pyproject must ship every module the package imports.
+
+    `pip install .` succeeded while `import http_server` failed, because ratelimit and
+    x402_gate were added after py-modules was written. Only installing outside the
+    repository and importing what is shipped reveals this: from the source tree the
+    local files satisfy the import no matter what pyproject says.
+    """
+
+    def test_every_top_level_module_is_declared(self):
+        import tomllib
+        data = tomllib.loads(pathlib.Path("pyproject.toml").read_text())
+        declared = set(data["tool"]["setuptools"]["py-modules"])
+        on_disk = {p.stem for p in pathlib.Path(".").glob("*.py")
+                   if not p.name.startswith("test_")}
+        self.assertEqual(on_disk - declared, set(),
+                         "modules on disk are missing from py-modules")
+        self.assertEqual(declared - on_disk, set(),
+                         "py-modules names a module that does not exist")
+
+    def test_import_closure_is_fully_declared(self):
+        """Any local module that is imported must also be shipped.
+
+        The earlier failure was exactly this: http_server imported ratelimit, and
+        ratelimit was not in py-modules, so the installed package raised
+        ModuleNotFoundError on a module that worked fine in the source tree. Scanning
+        imports statically catches it without depending on what happens to be installed
+        in the interpreter running the tests.
+        """
+        import ast, tomllib
+        data = tomllib.loads(pathlib.Path("pyproject.toml").read_text())
+        declared = set(data["tool"]["setuptools"]["py-modules"])
+        local = {p.stem for p in pathlib.Path(".").glob("*.py")
+                 if not p.name.startswith("test_")}
+        imported: set[str] = set()
+        for path in pathlib.Path(".").glob("*.py"):
+            tree = ast.parse(path.read_text())
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Import):
+                    imported.update(a.name.split(".")[0] for a in node.names)
+                elif isinstance(node, ast.ImportFrom) and node.level == 0 and node.module:
+                    imported.add(node.module.split(".")[0])
+        needed = imported & local
+        self.assertEqual(needed - declared, set(),
+                         "locally imported modules are not shipped by pyproject")
+
+    def test_build_artifacts_are_ignored(self):
+        ignored = pathlib.Path(".gitignore").read_text()
+        for artefact in ("build/", "dist/", ".venv/", "*.egg-info/"):
+            self.assertIn(artefact, ignored, f"{artefact} not ignored")
 
 
 if __name__ == "__main__":

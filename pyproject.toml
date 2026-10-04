@@ -16,4 +16,6 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-py-modules = ["drift", "mcp_server", "http_server"]
+# Каждый модуль должен быть здесь: забытый модуль даёт пакет, который устанавливается,
+# но падает на import. Обнаружено установкой вне репозитория.
+py-modules = ["drift", "mcp_server", "http_server", "ratelimit", "x402_gate"]
