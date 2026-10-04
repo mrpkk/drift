@@ -1,0 +1,9 @@
+title: drift
+description: Continuous mandate enforcement for AI agents — every action checked against the signed mandate before it happens
+theme: jekyll-theme-cayman
+markdown: kramdown
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+url: "https://mrpkk.github.io"
+baseurl: "/drift"
