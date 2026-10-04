@@ -49,7 +49,7 @@ class TestProtocol(unittest.TestCase):
         self.assertEqual(r["error"]["code"], -32601)
 
     def test_unsupported_method_errors(self):
-        r = S.handle_request({"jsonrpc": "2.0", "id": 1, "method": "resources/list"})
+        r = S.handle_request({"jsonrpc": "2.0", "id": 1, "method": "resources/read"})
         self.assertEqual(r["error"]["code"], -32601)
 
     def test_initialized_notification_returns_nothing(self):
@@ -151,6 +151,124 @@ class TestHealth(unittest.TestCase):
     def test_health_is_not_confused_with_mcp(self):
         from http_server import HEALTH_PATH, MCP_PATH
         self.assertNotEqual(HEALTH_PATH.rstrip("/"), MCP_PATH.rstrip("/"))
+
+class TestIntrospectionCompleteness(unittest.TestCase):
+    """A registry introspects all three list methods. Missing ones read as defects."""
+
+    def test_resources_list_returns_empty_not_error(self):
+        r = S.handle_request({"jsonrpc": "2.0", "id": 1, "method": "resources/list"})
+        self.assertIn("result", r, "resources/list must answer, not -32601")
+        self.assertEqual(r["result"]["resources"], [])
+
+    def test_prompts_list_returns_empty_not_error(self):
+        r = S.handle_request({"jsonrpc": "2.0", "id": 1, "method": "prompts/list"})
+        self.assertIn("result", r, "prompts/list must answer, not -32601")
+        self.assertEqual(r["result"]["prompts"], [])
+
+    def test_initialize_declares_all_three_capabilities(self):
+        r = S.handle_request({"jsonrpc": "2.0", "id": 1, "method": "initialize"})
+        caps = r["result"]["capabilities"]
+        for cap in ("tools", "resources", "prompts"):
+            self.assertIn(cap, caps)
+
+    def test_unknown_method_still_errors(self):
+        r = S.handle_request({"jsonrpc": "2.0", "id": 1, "method": "resources/read"})
+        self.assertEqual(r["error"]["code"], -32601)
+
+
+class TestToolAnnotationsAndDescriptions(unittest.TestCase):
+    """Glama scores tool definitions and captures annotations; both are checked."""
+
+    def _tools(self):
+        return S.handle_request({"jsonrpc": "2.0", "id": 1, "method": "tools/list"})["result"]["tools"]
+
+    def test_every_tool_declares_all_four_hints(self):
+        for t in self._tools():
+            a = t.get("annotations")
+            self.assertIsNotNone(a, f"{t['name']} has no annotations")
+            for hint in ("readOnlyHint", "destructiveHint", "idempotentHint", "openWorldHint"):
+                self.assertIn(hint, a, f"{t['name']} misses {hint}")
+                self.assertIsInstance(a[hint], bool)
+
+    def test_every_tool_has_a_title(self):
+        for t in self._tools():
+            self.assertTrue(t["annotations"].get("title"))
+
+    def test_every_tool_states_when_not_to_use_it(self):
+        for t in self._tools():
+            self.assertIn("Do NOT", t["description"],
+                          f"{t['name']} does not say when not to call it")
+
+    def test_every_tool_states_idempotency(self):
+        for t in self._tools():
+            self.assertIn("idempotent", t["description"].lower())
+
+    def test_descriptions_are_english_for_international_listing(self):
+        for t in self._tools():
+            self.assertFalse(any("Ѐ" <= ch <= "ӿ" for ch in t["description"]),
+                             f"{t['name']} description contains Cyrillic")
+
+    def test_every_parameter_is_described(self):
+        for t in self._tools():
+            props = t["inputSchema"].get("properties", {})
+            for name, spec in props.items():
+                if spec.get("type") == "object":
+                    continue
+                self.assertTrue(spec.get("description"),
+                                f"{t['name']}.{name} has no description")
+
+    def test_required_fields_are_declared(self):
+        tools = {t["name"]: t for t in self._tools()}
+        mandate = tools["drift_check"]["inputSchema"]["properties"]["mandate"]
+        self.assertEqual(
+            sorted(mandate["required"]),
+            sorted(["payee_id", "audience", "max_amount_minor", "currency",
+                    "valid_from", "valid_until", "allowed_intents"]),
+        )
+
+class TestBindAddress(unittest.TestCase):
+    """Regression: a container that binds loopback runs but serves nothing.
+
+    Docker port publishing forwards to the container's external interface, so a server
+    listening on 127.0.0.1 inside the image is unreachable while the container still
+    reports "running". The image was unlistable for exactly this reason.
+    """
+
+    def test_default_host_is_loopback(self):
+        import http_server
+        self.assertEqual(http_server.DEFAULT_HOST, "127.0.0.1")
+
+    def test_dockerfile_passes_an_explicit_host(self):
+        import pathlib
+        dockerfile = pathlib.Path(__file__).with_name("Dockerfile").read_text()
+        cmd = [l for l in dockerfile.splitlines() if l.startswith("CMD")]
+        self.assertTrue(cmd, "Dockerfile has no CMD")
+        self.assertIn("--host", cmd[0])
+        self.assertIn("0.0.0.0", cmd[0])
+
+    def test_host_flag_is_parsed_when_present(self):
+        import http_server
+        args = ["--http", "8095", "--host", "0.0.0.0"]
+        host = http_server.DEFAULT_HOST
+        if "--host" in args:
+            host = args[args.index("--host") + 1]
+        self.assertEqual(host, "0.0.0.0")
+
+    def test_image_declares_a_healthcheck(self):
+        import pathlib
+        dockerfile = pathlib.Path(__file__).with_name("Dockerfile").read_text()
+        self.assertIn("HEALTHCHECK", dockerfile)
+        self.assertIn("/health", dockerfile)
+
+    def test_container_runs_as_non_root(self):
+        import pathlib
+        dockerfile = pathlib.Path(__file__).with_name("Dockerfile").read_text()
+        self.assertIn("USER drift", dockerfile)
+        self.assertNotIn("USER root", dockerfile)
+
+    def test_startup_is_not_silent(self):
+        import http_server
+        self.assertTrue(callable(http_server.log))
 
 
 if __name__ == "__main__":

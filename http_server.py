@@ -25,6 +25,17 @@ FREE_TIER_PER_DAY = int(os.environ.get("DRIFT_FREE_TIER_PER_DAY", "100"))
 DISABLE_RATE_LIMIT_ENV = "DRIFT_NO_RATE_LIMIT"  # значение "1" отключает квоту
 X402_ENABLED_ENV = "DRIFT_X402_ENABLED"
 X402_PAY_TO_ENV = "DRIFT_X402_PAY_TO"
+DEFAULT_HOST = "127.0.0.1"  # сетевой доступ — только через явный --host
+
+
+def log(message: str) -> None:
+    """Единственная строка в stdout: systemd должен видеть, что сервер поднялся.
+
+    Молчащий при старте процесс невозможно отличить от зависшего, поэтому адрес
+    и порт печатаются явно.
+    """
+    sys.stderr.write(f"drift: {message}\n")
+    sys.stderr.flush()
 GATE: X402Gate | None = None  # создаётся в main(); None = только бесплатный тариф
 LIMITER: RateLimiter | None = None  # создаётся в main(); None = без лимита
 __version__ = "0.1.0"
@@ -152,7 +163,14 @@ def main() -> None:
     args = sys.argv[1:]
     if "--http" in args:
         port = int(args[args.index("--http") + 1])
-        HTTPServer(("127.0.0.1", port), Handler).serve_forever()
+        # Хост по умолчанию — петля: сервер не должен слушать в сети без явного
+        # разрешения. В контейнере или за туннелем нужен --host 0.0.0.0, иначе
+        # проброс порта упирается в петлю и контейнер «работает», не отвечая.
+        host = DEFAULT_HOST
+        if "--host" in args:
+            host = args[args.index("--host") + 1]
+        log(f"listening on {host}:{port}")
+        HTTPServer((host, port), Handler).serve_forever()
         return
     for line in sys.stdin:
         out = respond(line.encode())

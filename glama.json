@@ -1,0 +1,18 @@
+{
+  "$schema": "https://glama.ai/mcp/glama.schema.json",
+  "maintainer": "mrpkk",
+  "name": "drift",
+  "description": "Continuous mandate enforcement for AI agents. Checks every proposed action against a signed mandate before it happens: payee, audience, amount, currency, window, intent. Deny by default.",
+  "version": "0.1.0",
+  "license": "Apache-2.0",
+  "runtime": "python",
+  "build": { "dockerfile": "Dockerfile" },
+  "transport": "streamable-http",
+  "path": "/mcp",
+  "tools": ["drift_check", "drift_session", "drift_explain"],
+  "external_urls": {
+    "repository": "https://github.com/mrpkk/drift",
+    "documentation": "https://mrpkk.github.io/drift/"
+  },
+  "keywords": ["agents", "authorization", "security", "mandate", "payments", "x402", "ap2"]
+}
