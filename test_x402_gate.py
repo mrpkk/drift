@@ -23,7 +23,9 @@ from x402_gate import (
     USDC_BASE,
     USDC_BASE_SEPOLIA,
     USDC_DECIMALS,
+    NETWORK_BASE_SEPOLIA_V1,
     PaymentConfig,
+    SUPPORTED_COMBINATIONS,
     FacilitatorUnreachable,
     X402Gate,
     _decode_payment_header,
@@ -68,9 +70,12 @@ class TestConfig(unittest.TestCase):
         with self.assertRaises(ValueError):
             PaymentConfig(pay_to=PAY_TO, price=Decimal("0"))
 
-    def test_accepts_both_base_networks(self):
-        for net in (NETWORK_BASE, NETWORK_BASE_SEPOLIA):
-            self.assertEqual(PaymentConfig(pay_to=PAY_TO, network=net).network, net)
+    def test_accepts_only_served_networks(self):
+        """mainnet Base не обслуживается: принимать его молча нельзя."""
+        self.assertEqual(PaymentConfig(pay_to=PAY_TO).network,
+                         NETWORK_BASE_SEPOLIA_V1)
+        self.assertEqual(PaymentConfig(pay_to=PAY_TO, network=NETWORK_BASE_SEPOLIA,
+                                      version=2).network, NETWORK_BASE_SEPOLIA)
 
     def test_default_price_matches_documented_economics(self):
         self.assertEqual(PaymentConfig(pay_to=PAY_TO).price_atoms, 5000)
@@ -136,8 +141,9 @@ class TestPaymentHeaderDecoding(unittest.TestCase):
 class FakeFacilitator:
     """Stands in for the x402 facilitator. Records calls, returns a scripted answer."""
 
-    def __init__(self, is_valid=True, amount=5000, network=NETWORK_BASE,
+    def __init__(self, is_valid=True, amount=5000, network=None,
                  payer=PAY_TO, transaction="0xdead"):
+        network = network or NETWORK_BASE_SEPOLIA_V1
         self.is_valid = is_valid
         self.amount = amount
         self.network = network
@@ -163,7 +169,7 @@ class TestGateHappyPath(unittest.TestCase):
     def setUp(self):
         self.cfg = PaymentConfig(pay_to=PAY_TO, resource="drift:/mcp")
         self.gate = X402Gate(self.cfg)
-        self.fac = FakeFacilitator()
+        self.fac = FakeFacilitator(network=self.cfg.network)
 
     def _pay(self, gate=None, **kw):
         gate = gate or self.gate
@@ -175,7 +181,7 @@ class TestGateHappyPath(unittest.TestCase):
     def test_valid_payment_settles(self):
         s = self._pay()
         self.assertEqual(s.amount, Decimal("0.005"))
-        self.assertEqual(s.network, NETWORK_BASE)
+        self.assertEqual(s.network, self.cfg.network)
         self.assertEqual(s.transaction_ref, "0xdead")
 
     def test_facilitator_was_actually_called(self):
@@ -230,13 +236,15 @@ class TestGateRejections(unittest.TestCase):
     def test_underpayment_is_refused(self):
         """The attack: pay one cent, present a genuine receipt."""
         nonce = self.gate.issue_nonce()
-        with mock.patch("x402_gate._post_facilitator", FakeFacilitator(amount=1)):
+        with mock.patch("x402_gate._post_facilitator",
+                        FakeFacilitator(amount=1, network=NETWORK_BASE_SEPOLIA_V1)):
             with self.assertRaisesRegex(ValueError, "required 0.005 USDC"):
                 self.gate.verify(self._header(nonce), "drift:/mcp")
 
     def test_overpayment_is_refused(self):
         nonce = self.gate.issue_nonce()
-        with mock.patch("x402_gate._post_facilitator", FakeFacilitator(amount=999_999)):
+        with mock.patch("x402_gate._post_facilitator",
+                        FakeFacilitator(amount=999_999, network=NETWORK_BASE_SEPOLIA_V1)):
             with self.assertRaisesRegex(ValueError, "required 0.005 USDC"):
                 self.gate.verify(self._header(nonce), "drift:/mcp")
 
@@ -249,7 +257,8 @@ class TestGateRejections(unittest.TestCase):
 
     def test_facilitator_rejection_is_refused(self):
         nonce = self.gate.issue_nonce()
-        with mock.patch("x402_gate._post_facilitator", FakeFacilitator(is_valid=False)):
+        with mock.patch("x402_gate._post_facilitator",
+                        FakeFacilitator(is_valid=False, network=NETWORK_BASE_SEPOLIA_V1)):
             with self.assertRaisesRegex(ValueError, "facilitator rejected"):
                 self.gate.verify(self._header(nonce), "drift:/mcp")
 
@@ -262,7 +271,8 @@ class TestGateRejections(unittest.TestCase):
     def test_nonce_is_spent_even_when_amount_is_wrong(self):
         """Otherwise an attacker retries the same nonce with a corrected amount."""
         nonce = self.gate.issue_nonce()
-        with mock.patch("x402_gate._post_facilitator", FakeFacilitator(amount=1)):
+        with mock.patch("x402_gate._post_facilitator",
+                        FakeFacilitator(amount=1, network=NETWORK_BASE_SEPOLIA_V1)):
             with self.assertRaises(ValueError):
                 self.gate.verify(self._header(nonce), "drift:/mcp")
         with mock.patch("x402_gate._post_facilitator", FakeFacilitator()):
@@ -349,15 +359,18 @@ class TestFacilitatorOutage(unittest.TestCase):
         with mock.patch("x402_gate._post_facilitator", down):
             with self.assertRaises(FacilitatorUnreachable):
                 self.gate.verify(self._header(nonce), "drift:/mcp")
-        with mock.patch("x402_gate._post_facilitator", FakeFacilitator()):
+        with mock.patch("x402_gate._post_facilitator",
+                        FakeFacilitator(network=NETWORK_BASE_SEPOLIA_V1)):
             settlement = self.gate.verify(self._header(nonce), "drift:/mcp")
         self.assertEqual(settlement.amount, Decimal("0.005"))
 
     def test_nonce_is_burned_after_success(self):
         nonce = self.gate.issue_nonce()
-        with mock.patch("x402_gate._post_facilitator", FakeFacilitator()):
+        with mock.patch("x402_gate._post_facilitator",
+                        FakeFacilitator(network=NETWORK_BASE_SEPOLIA_V1)):
             self.gate.verify(self._header(nonce), "drift:/mcp")
-        with mock.patch("x402_gate._post_facilitator", FakeFacilitator()):
+        with mock.patch("x402_gate._post_facilitator",
+                        FakeFacilitator(network=NETWORK_BASE_SEPOLIA_V1)):
             with self.assertRaisesRegex(ValueError, "already spent"):
                 self.gate.verify(self._header(nonce), "drift:/mcp")
 
@@ -404,6 +417,39 @@ class TestServerWiring(unittest.TestCase):
     def test_header_names_are_lowercase_safe(self):
         import http_server
         self.assertEqual(http_server.HEADER_PAYMENT, "x-payment")
+
+class TestFacilitatorMatrix(unittest.TestCase):
+    """The supported (version, scheme, network) triples were read from the live
+    facilitator, not assumed. mainnet Base is absent, and a substring check for
+    "8453" is misleading because it also matches "84532".
+    """
+
+    def test_default_combination_is_actually_supported(self):
+        cfg = PaymentConfig(pay_to=PAY_TO)
+        self.assertIn((cfg.version, SCHEME_EXACT, cfg.network), SUPPORTED_COMBINATIONS)
+
+    def test_mainnet_base_is_refused_by_this_facilitator(self):
+        with self.assertRaisesRegex(ValueError, "does not serve"):
+            PaymentConfig(pay_to=PAY_TO, network=NETWORK_BASE)
+
+    def test_v1_on_caip2_sepolia_is_refused(self):
+        """v1 is registered under base-sepolia, not eip155:84532."""
+        with self.assertRaises(ValueError):
+            PaymentConfig(pay_to=PAY_TO, network=NETWORK_BASE_SEPOLIA)
+
+    def test_v2_on_sepolia_is_allowed(self):
+        cfg = PaymentConfig(pay_to=PAY_TO, network=NETWORK_BASE_SEPOLIA, version=2)
+        self.assertEqual(cfg.version, 2)
+
+    def test_custom_facilitator_may_serve_mainnet(self):
+        cfg = PaymentConfig(pay_to=PAY_TO, network=NETWORK_BASE,
+                            facilitator_url="https://facilitator.pay.ai")
+        self.assertEqual(cfg.network, NETWORK_BASE)
+
+    def test_no_supported_combination_is_mainnet_base(self):
+        for _version, _scheme, network in SUPPORTED_COMBINATIONS:
+            self.assertNotEqual(network, NETWORK_BASE,
+                                "mainnet Base must not appear in the supported set")
 
 
 if __name__ == "__main__":

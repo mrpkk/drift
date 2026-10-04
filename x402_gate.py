@@ -60,18 +60,38 @@ __all__ = [
     "FacilitatorUnreachable",
 ]
 
+DEFAULT_FACILITATOR = "https://x402.org/facilitator"
+
 #: Price of one mandate check. 0.005 USDC, matching the measured unit economics in
 #: MONETIZATION.md: a Base transaction costs ~$0.00146, so the rail takes ~29 %.
 PRICE_USDC = Decimal("0.005")
 
+# Триплеты (версия, схема, сеть), которые реально объявляет живой фасилитатор.
+# Проверено против https://x402.org/facilitator/supported, а не взято из памяти:
+#   v1 exact  base-sepolia            (тестнет, только)
+#   v1 exact  solana-devnet           (тестнет, только)
+#   v2 exact  eip155:84532            (Base Sepolia, CAIP-2)
+#   v2 exact  и ещё 6 сетей, все тестнеты
+#   v2 upto / batch-settlement        (Base Sepolia)
+# mainnet Base (eip155:8453) НЕ поддерживается вовсе. Ловушка при проверке:
+# подстрока "8453" совпадает с "84532", поэтому grep по сети врёт.
 X402_VERSION = 1
 SCHEME_EXACT = "exact"
 NETWORK_BASE = "eip155:8453"
 NETWORK_BASE_SEPOLIA = "eip155:84532"
+NETWORK_BASE_SEPOLIA_V1 = "base-sepolia"
+
+#: Что фасилитатор действительно обслуживает. Всё вне этого списка не заработает.
+SUPPORTED_COMBINATIONS: frozenset[tuple[int, str, str]] = frozenset({
+    (1, SCHEME_EXACT, NETWORK_BASE_SEPOLIA_V1),
+    (2, SCHEME_EXACT, NETWORK_BASE_SEPOLIA),
+    (2, "upto", NETWORK_BASE_SEPOLIA),
+    (2, "batch-settlement", NETWORK_BASE_SEPOLIA),
+})
 USDC_DECIMALS = 6
 USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
 USDC_BASE_SEPOLIA = "0x036CbD53842c5426634e7929541eC2318f3dCF7e"
-SUPPORTED_NETWORKS = (NETWORK_BASE, NETWORK_BASE_SEPOLIA)
+SUPPORTED_NETWORKS = (NETWORK_BASE, NETWORK_BASE_SEPOLIA, NETWORK_BASE_SEPOLIA_V1)
 
 HEADER_CHALLENGE = "payment-required"
 HEADER_PAYMENT = "x-payment"
@@ -111,18 +131,29 @@ class PaymentConfig:
     """What this deployment demands and who it trusts to verify payments."""
 
     pay_to: str
-    facilitator_url: str = "https://x402.org/facilitator"
-    network: str = NETWORK_BASE
+    facilitator_url: str = DEFAULT_FACILITATOR
+    network: str = NETWORK_BASE_SEPOLIA_V1  # v1-форма тела соответствует base-sepolia
     asset: str = USDC_BASE
     price: Decimal = PRICE_USDC
     resource: str = "drift:/mcp"
     settlement_header: str = HEADER_SETTLEMENT
+
+    version: int = X402_VERSION
 
     def __post_init__(self) -> None:
         if self.network not in SUPPORTED_NETWORKS:
             raise ValueError(
                 f"unsupported network {self.network!r}; expected one of {SUPPORTED_NETWORKS}"
             )
+        if self.facilitator_url == DEFAULT_FACILITATOR:
+            key = (self.version, SCHEME_EXACT, self.network)
+            if key not in SUPPORTED_COMBINATIONS:
+                raise ValueError(
+                    f"{DEFAULT_FACILITATOR} does not serve x402 v{self.version} "
+                    f"'{SCHEME_EXACT}' on {self.network!r}. It serves only "
+                    f"{sorted(SUPPORTED_COMBINATIONS)}. mainnet Base needs a "
+                    f"different facilitator (PayAI serves mainnet EVM)."
+                )
         if self.price <= 0:
             raise ValueError("price must be positive")
         to_atoms(self.price)  # fails fast on sub-atom precision
