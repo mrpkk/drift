@@ -1,0 +1,26 @@
+{
+  "dry_run": false,
+  "tests": "145",
+  "channels": {
+    "devto": {
+      "status": "SKIPPED",
+      "reason": "нет DEVTO_API_KEY в ~/.env"
+    },
+    "hashnode": {
+      "status": "SKIPPED",
+      "reason": "нет HASHNODE_TOKEN в ~/.env"
+    },
+    "reddit": {
+      "status": "BLOCKED",
+      "code": 403,
+      "reason": "Reddit отдаёт 403: блокировка по IP, не по клиенту. Нужен REDDIT_PROXY=socks5://host:port в ~/.env"
+    },
+    "hackernews": {
+      "status": "MANUAL",
+      "code": 200,
+      "reason": "у HN нет API для подачи; нужна форма и вход владельца",
+      "title": "Show HN: drift — continuous mandate enforcement for AI agents",
+      "file": "distribution/hackernews.md"
+    }
+  }
+}
