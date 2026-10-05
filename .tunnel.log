@@ -1159,3 +1159,7 @@
 {"level":"error","event":0,"ip":"198.41.200.13","connIndex":0,"error":"Unauthorized: Tunnel not found","time":"2026-10-05T01:42:52Z","message":"Register tunnel error from server side"}
 {"level":"info","event":0,"ip":"198.41.200.13","connIndex":0,"time":"2026-10-05T01:42:52Z","message":"Retrying connection in up to 32s"}
 {"level":"error","error":"Unauthorized: Tunnel not found","connIndex":0,"time":"2026-10-05T01:43:08Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.13","connIndex":0,"time":"2026-10-05T01:45:47Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"error","error":"Unauthorized: Tunnel not found","time":"2026-10-05T01:45:49Z","message":"failed to serve incoming request"}
+{"level":"error","event":0,"ip":"198.41.200.13","connIndex":0,"error":"Unauthorized: Tunnel not found","time":"2026-10-05T01:45:50Z","message":"Register tunnel error from server side"}
+{"level":"info","event":0,"ip":"198.41.200.13","connIndex":0,"time":"2026-10-05T01:45:50Z","message":"Retrying connection in up to 32s"}
