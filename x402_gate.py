@@ -97,6 +97,16 @@ HEADER_CHALLENGE = "payment-required"
 HEADER_PAYMENT = "x-payment"
 HEADER_SETTLEMENT = "payment-response"
 
+#: v2 спецификация переименовала заголовок оплаты: PAYMENT-SIGNATURE.
+#: X-PAYMENT — имя из v1. Пока сервис выставляет v1-челлендж,
+#: HEADER_PAYMENT верен; но SUPPORTED_COMBINATIONS ниже уже содержит
+#: пары (2, …), и как только появится v2-челлендж, клиент по v2 пришлёт
+#: первый заголовок и не будет услышан — молча, без единой ошибки.
+#: Читаем оба. Проверено в attest (attest/service.py:602), где так же
+#: принимаются оба имени.
+HEADER_PAYMENT_V2 = "payment-signature"
+PAYMENT_HEADERS = (HEADER_PAYMENT, HEADER_PAYMENT_V2)
+
 MAX_TIMEOUT_SECONDS = 60
 FACILITATOR_TIMEOUT_SECONDS = 10
 

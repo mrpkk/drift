@@ -14,6 +14,8 @@ import unittest
 from decimal import Decimal
 from unittest import mock
 
+import http_server
+import x402_gate
 from x402_gate import (
     MAX_TIMEOUT_SECONDS,
     NETWORK_BASE,
@@ -454,3 +456,31 @@ class TestFacilitatorMatrix(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
+
+class TestPaymentHeaderNames(unittest.TestCase):
+    """Заголовок оплаты называется по-разному в версиях спецификации.
+
+    Проверено в attest (attest/service.py:602): там читаются оба имени,
+    потому что клиент может прийти по любой из версий. Здесь тот же риск
+    был реальным — SUPPORTED_COMBINATIONS уже содержит пары (2, …),
+    то есть v2-челлендж планируется, а заголовок был только v1.
+    """
+
+    def test_both_names_are_declared(self):
+        self.assertEqual(x402_gate.HEADER_PAYMENT, "x-payment")
+        self.assertEqual(x402_gate.HEADER_PAYMENT_V2, "payment-signature")
+        self.assertIn(x402_gate.HEADER_PAYMENT, x402_gate.PAYMENT_HEADERS)
+        self.assertIn(x402_gate.HEADER_PAYMENT_V2, x402_gate.PAYMENT_HEADERS)
+
+    def test_server_reads_either_name(self):
+        """Сервер обязан слышать плательщика по обеим версиям."""
+        import inspect
+        src = inspect.getsource(http_server)
+        self.assertIn("PAYMENT_HEADERS", src)
+        # ровно одно место читает заголовок, и оно перебирает оба имени
+        self.assertNotIn("self.headers.get(HEADER_PAYMENT)", src)
+
+
+if __name__ == "__main__":
+    unittest.main()

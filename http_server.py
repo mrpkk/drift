@@ -14,6 +14,7 @@ from mcp_server import respond
 from ratelimit import DAY_SECONDS, RateLimiter, client_key
 from x402_gate import (
     HEADER_PAYMENT,
+    PAYMENT_HEADERS,
     FacilitatorUnreachable,
     PaymentConfig,
     X402Gate,
@@ -63,7 +64,11 @@ class Handler(BaseHTTPRequestHandler):
             return
         # Free tier: quota is charged per request, before any parsing, so an exhausted
         # caller cannot make the server do work. Anonymous callers need no key.
-        payment = self.headers.get(HEADER_PAYMENT)
+        # Оба имени заголовка: v1 — X-PAYMENT, v2 — PAYMENT-SIGNATURE.
+        # Сервис выставляет v1, но SUPPORTED_COMBINATIONS уже держит
+        # пары (2, …), и плательщик по v2 иначе остался бы неуслышанным.
+        payment = next((self.headers.get(h) for h in PAYMENT_HEADERS
+                        if self.headers.get(h)), None)
         if payment:
             status, body, extra = self._settle(payment)
             self._send(status, body, extra)
