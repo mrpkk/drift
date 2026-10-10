@@ -31,6 +31,7 @@ from x402_gate import (
     FacilitatorUnreachable,
     X402Gate,
     _decode_payment_header,
+    extract_nonce,
     build_requirement,
     challenge_body,
     challenge_headers,
@@ -192,8 +193,16 @@ class TestGateHappyPath(unittest.TestCase):
         self.assertEqual(self.fac.calls[0]["path"], "/verify")
 
     def test_requirement_sent_matches_what_was_issued(self):
+        """Имя поля исправлено 09.10.2026: было `requirements`.
+
+        Тест проверял то имя, которое мы сами и отправляли, поэтому был
+        зелёным. Живой фасилитатор на `requirements` отвечает HTTP 400
+        missing_parameters — платёж отвергался, не дойдя до подписи.
+        Тест, закрепляющий неверный ключ, хуже отсутствия теста: он
+        уверяет, что путь рабочий.
+        """
         self._pay()
-        sent = self.fac.calls[0]["payload"]["requirements"]
+        sent = self.fac.calls[0]["payload"]["paymentRequirements"]
         self.assertEqual(sent["maxAmountRequired"], "5000")
         self.assertEqual(sent["payTo"], PAY_TO)
 
@@ -480,6 +489,101 @@ class TestPaymentHeaderNames(unittest.TestCase):
         self.assertIn("PAYMENT_HEADERS", src)
         # ровно одно место читает заголовок, и оно перебирает оба имени
         self.assertNotIn("self.headers.get(HEADER_PAYMENT)", src)
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+class TestV2WireFormat(unittest.TestCase):
+    """Настоящий v2-платёж: nonce лежит в payload.authorization.nonce.
+
+    Проверено 09.10.2026 при работе над ṚTA: в v2 тело платежа устроено
+    иначе, чем в v1. Прежний разбор смотрел только в payload.nonce, и
+    корректный v2-платёж отвергался с «payment carries no nonce».
+    """
+
+    def _v2_payment(self, nonce: str) -> dict:
+        return {
+            "x402Version": 2,
+            "accepted": {
+                "scheme": "exact",
+                "network": NETWORK_BASE_SEPOLIA,
+                "maxAmountRequired": "5000",
+                "payTo": PAY_TO,
+                "asset": USDC_BASE_SEPOLIA,
+                "extra": {"name": "USDC", "version": "2"},
+            },
+            "payload": {
+                "signature": "0x" + "11" * 65,
+                "authorization": {
+                    "from": "0x" + "9c" * 20, "to": PAY_TO, "value": "5000",
+                    "validAfter": "0", "validBefore": "9999999999",
+                    "nonce": nonce,
+                },
+            },
+        }
+
+    def test_v2_nonce_is_read_from_authorization(self):
+        gate = X402Gate(PaymentConfig(pay_to=PAY_TO))
+        issued = gate.issue_nonce()
+        self.assertEqual(extract_nonce(self._v2_payment(issued)), issued)
+
+    def test_v1_nonce_still_works(self):
+        """v1 не должен сломаться: публичный фасилитатор обслуживает v1
+        на base-sepolia, и отказ от него убирает работающий путь."""
+        gate = X402Gate(PaymentConfig(pay_to=PAY_TO))
+        issued = gate.issue_nonce()
+        self.assertEqual(extract_nonce({"payload": {"nonce": issued}}), issued)
+
+    def test_nonce_absent_everywhere_is_empty_not_invented(self):
+        self.assertEqual(extract_nonce({"payload": {"authorization": {}}}), "")
+
+
+class TestFacilitatorPayloadShape(unittest.TestCase):
+    """Форма запроса проверена вживую 09.10.2026 против x402.org."""
+
+    PAY = "0x1111111111111111111111111111111111111111"
+    RESOURCE = "drift:/mcp"
+
+    def _sent_payload(self):
+        gate = X402Gate(PaymentConfig(
+            pay_to=self.PAY, network=NETWORK_BASE_SEPOLIA_V1,
+            resource=self.RESOURCE))
+        nonce = gate.issue_nonce()
+        import x402_gate as mod
+        seen = {}
+        real = mod._post_facilitator
+
+        def spy(url, path, payload):
+            seen.update(payload)
+            return {"isValid": True, "payer": self.PAY,
+                    "amount": str(gate.config.price_atoms)}
+
+        mod._post_facilitator = spy
+        try:
+            gate.verify(b64url({"payload": {"nonce": nonce}}), self.RESOURCE)
+        finally:
+            mod._post_facilitator = real
+        return seen
+
+    def test_key_is_paymentrequirements(self):
+        sent = self._sent_payload()
+        self.assertIn("paymentRequirements", sent)
+        self.assertNotIn("requirements", sent)
+
+    def test_both_amount_fields_present(self):
+        """Без amount фасилитатор отвечает 500 Cannot convert undefined
+        to a BigInt — проверено вживую."""
+        req = self._sent_payload()["paymentRequirements"]
+        self.assertEqual(req["amount"], req["maxAmountRequired"])
+
+    def test_token_name_and_version_present(self):
+        """Без extra:{name,version} фасилитатор не собирает домен EIP-712
+        и отвечает missing_eip712_domain — проверено вживую."""
+        extra = self._sent_payload()["paymentRequirements"]["extra"]
+        self.assertEqual(extra["name"], "USDC")
+        self.assertEqual(extra["version"], "2")
 
 
 if __name__ == "__main__":

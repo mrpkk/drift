@@ -189,6 +189,10 @@ def build_requirement(config: PaymentConfig, nonce: str) -> dict[str, Any]:
     return {
         "scheme": SCHEME_EXACT,
         "network": config.network,
+        # И amount, и maxAmountRequired обязательны: без amount фасилитатор
+        # отвечает 500 "Cannot convert undefined to a BigInt". Проверено
+        # вживую 09.10.2026.
+        "amount": str(config.price_atoms),
         "maxAmountRequired": str(config.price_atoms),
         "resource": config.resource,
         "description": "drift: continuous mandate enforcement for AI agents",
@@ -247,6 +251,31 @@ def _decode_payment_header(value: str) -> dict[str, Any]:
     if not isinstance(parsed, dict):
         raise ValueError("payment header is not an object")
     return parsed
+
+
+def extract_nonce(presented: Mapping[str, Any]) -> str:
+    """Найти nonce в платеже любой из версий.
+
+    В v1 он лежит прямо в теле или в ``payload.nonce``. В v2 — в
+    ``payload.authorization.nonce``, потому что в v2 блок ``payload``
+    несёт подпись и авторизацию EIP-3009, а не наш служебный nonce.
+
+    Прежний разбор смотрел только в payload и верхний уровень. Настоящий
+    v2-платёж, полностью корректный, попадал в «payment carries no nonce»
+    и отвергался. Проверено 09.10.2026 на живом фасилитаторе.
+
+    Пустая строка означает «nonce не найден», и вызывающий обязан отказать.
+    """
+    candidates = (
+        _dig(presented, "payload", "authorization", "nonce"),
+        _dig(presented, "payload", "nonce"),
+        _dig(presented, "nonce"),
+        _dig(presented, "payload", "authorization", "nonce_hex"),
+    )
+    for value in candidates:
+        if value:
+            return str(value)
+    return ""
 
 
 def _post_facilitator(url: str, path: str, payload: Mapping[str, Any]) -> dict[str, Any]:
@@ -335,7 +364,9 @@ class X402Gate:
         config = self._config
         presented = _decode_payment_header(payment_header)
 
-        nonce = str(presented.get("nonce") or _dig(presented, "payload", "nonce") or "")
+        # Разбор версии-agnostic: v1 и v2 кладут nonce в разные места,
+        # и клиент присылает ту версию, которую объявил челендж.
+        nonce = extract_nonce(presented)
         if not nonce:
             raise ValueError("payment carries no nonce")
         expected = self.requirement_for(nonce)
@@ -350,7 +381,9 @@ class X402Gate:
             result = _post_facilitator(config.facilitator_url, "/verify", {
                 "x402Version": X402_VERSION,
                 "paymentPayload": presented,
-                "requirements": expected,
+                # Имя поля — paymentRequirements. Прежнее `requirements`
+                # фасилитатор отвергал целиком: HTTP 400 missing_parameters.
+                "paymentRequirements": expected,
             })
         except (urllib.error.URLError, OSError, ValueError) as exc:
             # The nonce is released, not burned: we do not know whether the money moved,
