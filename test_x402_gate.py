@@ -588,3 +588,156 @@ class TestFacilitatorPayloadShape(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestV2ChallengeShape(unittest.TestCase):
+    """Челлендж v2 устроен иначе, чем v1.
+
+    В v1 `resource` — строка внутри accepts[0]. В v2 он отдельный объект на
+    верхнем уровне, а внутри accepts остаются scheme/network/amount/asset/
+    payTo/extra. Проверено 09.10.2026 против живого ответа фасилитатора и
+    против формы, которую строит attest (совпадает байт в байт по ключам).
+
+    Зачем drift это: (v1, base-sepolia) в /supported заявлена, но живьём
+    не обслуживается; работает только (v2, eip155:84532). Без v2-челленджа
+    drift не способен принять платёж вообще.
+    """
+
+    PAY = "0x1111111111111111111111111111111111111111"
+
+    def _v2_config(self):
+        return PaymentConfig(pay_to=self.PAY, network=NETWORK_BASE_SEPOLIA,
+                             version=2, asset=USDC_BASE_SEPOLIA,
+                             resource="drift:/mcp")
+
+    def test_v2_config_is_accepted_by_the_guard(self):
+        cfg = self._v2_config()          # не должно бросить исключение
+        self.assertEqual(cfg.version, 2)
+
+    def test_version_comes_from_config_not_global(self):
+        cfg = self._v2_config()
+        body = challenge_body(cfg, "n1")
+        self.assertEqual(body["x402Version"], 2,
+                         "версия читалась из константы, а не из конфигурации")
+
+    def test_v2_resource_is_an_object_at_top_level(self):
+        body = challenge_body(self._v2_config(), "n1")
+        self.assertIsInstance(body["resource"], dict)
+        self.assertEqual(body["resource"]["url"], "drift:/mcp")
+        self.assertIn("description", body["resource"])
+        self.assertIn("mimeType", body["resource"])
+
+    def test_v2_resource_is_not_duplicated_inside_accepts(self):
+        body = challenge_body(self._v2_config(), "n1")
+        self.assertNotIn("resource", body["accepts"][0])
+
+    def test_v1_shape_is_unchanged(self):
+        """v1-путь ломать нельзя: он ещё используется и покрыт тестами."""
+        cfg = PaymentConfig(pay_to=self.PAY, network=NETWORK_BASE_SEPOLIA_V1,
+                            version=1)
+        body = challenge_body(cfg, "n1")
+        self.assertEqual(body["x402Version"], 1)
+        self.assertEqual(body["accepts"][0]["resource"], cfg.resource)
+        self.assertNotIsInstance(body.get("resource"), dict)
+
+
+if __name__ == "__main__":
+    unittest.main()
+
+
+class TestV2EndToEnd(unittest.TestCase):
+    """Сквозной v2: челлендж → подписанный платёж → расчёт.
+
+    Клиент собирает тело так, как это делает настоящий плательщик по v2:
+    x402Version и accepted наверху, подпись и авторизация внутри payload.
+    Плательщик отвечает на наш челлендж — значит и адрес, и сумма, и сеть
+    берутся именно из того, что мы выдали, а не из выдуманных констант.
+    """
+
+    PAY = "0x1111111111111111111111111111111111111111"
+
+    def test_v2_payment_from_our_own_challenge_is_accepted(self):
+        gate = X402Gate(PaymentConfig(
+            pay_to=self.PAY, network=NETWORK_BASE_SEPOLIA, version=2,
+            asset=USDC_BASE_SEPOLIA, resource="drift:/mcp"))
+        nonce = gate.issue_nonce()
+        challenge = challenge_body(gate.config, nonce)
+        accepts = challenge["accepts"][0]
+
+        presented = {
+            "x402Version": 2,
+            "accepted": {
+                "scheme": accepts["scheme"],
+                "network": accepts["network"],
+                "maxAmountRequired": accepts["maxAmountRequired"],
+                "payTo": accepts["payTo"],
+                "asset": accepts["asset"],
+                "extra": accepts["extra"],
+            },
+            "payload": {
+                "signature": "0x" + "11" * 65,
+                "authorization": {
+                    "from": "0x" + "9c" * 20,
+                    "to": accepts["payTo"],
+                    "value": accepts["amount"],
+                    "validAfter": "0",
+                    "validBefore": "9999999999",
+                    "nonce": nonce,
+                },
+            },
+        }
+
+        import x402_gate as mod
+        seen = {}
+
+        def spy(url, path, payload):
+            seen.update(payload)
+            return {"isValid": True, "payer": self.PAY,
+                    "amount": accepts["amount"]}
+
+        real = mod._post_facilitator
+        mod._post_facilitator = spy
+        try:
+            settlement = gate.verify(b64url(presented), "drift:/mcp")
+        finally:
+            mod._post_facilitator = real
+
+        self.assertEqual(seen["x402Version"], 2)
+        self.assertIn("paymentRequirements", seen)
+        self.assertEqual(int(settlement.amount * 10 ** USDC_DECIMALS),
+                         int(accepts["amount"]))
+
+    def test_replayed_v2_payment_is_refused(self):
+        """Одна оплата — одно предъявление."""
+        gate = X402Gate(PaymentConfig(
+            pay_to=self.PAY, network=NETWORK_BASE_SEPOLIA, version=2,
+            asset=USDC_BASE_SEPOLIA, resource="drift:/mcp"))
+        nonce = gate.issue_nonce()
+        accepts = challenge_body(gate.config, nonce)["accepts"][0]
+        presented = {
+            "x402Version": 2,
+            "accepted": {"scheme": "exact", "network": accepts["network"],
+                         "maxAmountRequired": accepts["maxAmountRequired"],
+                         "payTo": self.PAY, "asset": accepts["asset"],
+                         "extra": accepts["extra"]},
+            "payload": {"signature": "0x" + "11" * 65,
+                        "authorization": {"from": "0x" + "9c" * 20,
+                                          "to": self.PAY, "value": accepts["amount"],
+                                          "validAfter": "0",
+                                          "validBefore": "9999999999",
+                                          "nonce": nonce}},
+        }
+        import x402_gate as mod
+        real = mod._post_facilitator
+        mod._post_facilitator = lambda *a, **k: {
+            "isValid": True, "payer": self.PAY, "amount": accepts["amount"]}
+        try:
+            gate.verify(b64url(presented), "drift:/mcp")
+            with self.assertRaises(ValueError):
+                gate.verify(b64url(presented), "drift:/mcp")
+        finally:
+            mod._post_facilitator = real
+
+
+if __name__ == "__main__":
+    unittest.main()

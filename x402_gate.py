@@ -205,8 +205,33 @@ def build_requirement(config: PaymentConfig, nonce: str) -> dict[str, Any]:
 
 
 def challenge_body(config: PaymentConfig, nonce: str) -> dict[str, Any]:
-    """The JSON body of a 402 response."""
-    return {"x402Version": X402_VERSION, "accepts": [build_requirement(config, nonce)]}
+    """The JSON body of a 402 response, in the shape the version demands.
+
+    **v1:** ``resource`` is a string inside ``accepts[0]``.
+    **v2:** ``resource`` moves out to the top level as an object
+    (``url`` / ``description`` / ``mimeType``), and ``accepts[0]`` keeps
+    only scheme, network, amounts, asset, payTo and extra.
+
+    Версия читается из конфигурации, а не из константы модуля: иначе
+    развёрнутый с ``version=2`` всё равно выдаёт в заголовке v1, и клиент
+    отвечает платежом не той версии, которую мы объявили.
+
+    Форма v2 сверена 09.10.2026 с живым ответом фасилитатора и с attest,
+    который строит такую же структуру.
+    """
+    accepts = build_requirement(config, nonce)
+    if config.version >= 2:
+        resource = accepts.pop("resource")
+        return {
+            "x402Version": config.version,
+            "resource": {
+                "url": resource,
+                "description": accepts.pop("description"),
+                "mimeType": accepts.pop("mimeType"),
+            },
+            "accepts": [accepts],
+        }
+    return {"x402Version": config.version, "accepts": [accepts]}
 
 
 def challenge_headers(config: PaymentConfig, nonce: str) -> dict[str, str]:
@@ -379,7 +404,7 @@ class X402Gate:
 
         try:
             result = _post_facilitator(config.facilitator_url, "/verify", {
-                "x402Version": X402_VERSION,
+                "x402Version": config.version,
                 "paymentPayload": presented,
                 # Имя поля — paymentRequirements. Прежнее `requirements`
                 # фасилитатор отвергал целиком: HTTP 400 missing_parameters.
