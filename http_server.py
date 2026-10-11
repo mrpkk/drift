@@ -26,6 +26,8 @@ FREE_TIER_PER_DAY = int(os.environ.get("DRIFT_FREE_TIER_PER_DAY", "100"))
 DISABLE_RATE_LIMIT_ENV = "DRIFT_NO_RATE_LIMIT"  # значение "1" отключает квоту
 X402_ENABLED_ENV = "DRIFT_X402_ENABLED"
 X402_PAY_TO_ENV = "DRIFT_X402_PAY_TO"
+X402_NETWORK_ENV = "DRIFT_X402_NETWORK"
+X402_FACILITATOR_ENV = "DRIFT_X402_FACILITATOR"
 DEFAULT_HOST = "127.0.0.1"  # сетевой доступ — только через явный --host
 
 
@@ -162,7 +164,16 @@ def main() -> None:
         pay_to = os.environ.get(X402_PAY_TO_ENV, "").strip()
         if not pay_to:
             raise SystemExit(f"{X402_PAY_TO_ENV} must be set to receive payments")
-        GATE = X402Gate(PaymentConfig(pay_to=pay_to))
+        # Сеть и фасилитатор задаются окружением: зашитый Sepolia означал, что
+        # переключить деплой на mainnet можно было только правкой кода.
+        kwargs = {"pay_to": pay_to}
+        network = os.environ.get(X402_NETWORK_ENV, "").strip()
+        if network:
+            kwargs["network"] = network
+        facilitator = os.environ.get(X402_FACILITATOR_ENV, "").strip()
+        if facilitator:
+            kwargs["facilitator_url"] = facilitator
+        GATE = X402Gate(PaymentConfig(**kwargs))
     if os.environ.get(DISABLE_RATE_LIMIT_ENV) != "1":
         LIMITER = RateLimiter(limit=FREE_TIER_PER_DAY, window_seconds=DAY_SECONDS)
     args = sys.argv[1:]
