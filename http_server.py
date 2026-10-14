@@ -229,6 +229,11 @@ class Handler(BaseHTTPRequestHandler):
                 {"status": "ok", "service": "drift", "version": __version__},
                 ensure_ascii=False).encode())
             return
+        if self.path.rstrip("/") == "/.well-known/mcp/server-card.json":
+            from mcp_server import server_card
+            self._send(200, json.dumps(server_card()).encode("utf-8"),
+                       {"X-Content-Type": "application/json; charset=utf-8"})
+            return
         if self.path.rstrip("/") == "/robots.txt":
             self._send(200, _robots().encode("utf-8"),
                        {"X-Content-Type": "text/plain; charset=utf-8"})

@@ -270,3 +270,24 @@ def respond(raw: bytes) -> tuple[int, bytes] | None:
         return 202, b""
     payload = replies if batch else replies[0]
     return 200, json.dumps(payload, ensure_ascii=False).encode("utf-8")
+
+
+def server_card() -> dict:
+    """Карта сервера для каталогов MCP (SEP-1649).
+
+    Каталоги сканируют /mcp сами, но если сканирование не проходит — за
+    авторизацией, из-за WAF или по таймауту — читается эта карта.
+    Отдаём инструменты из одного источника с сервером: расхождение
+    между картой и /mcp читается как обман.
+    """
+    return {
+        "serverInfo": {"name": "drift", "version": "0.1.0"},
+        "authentication": {"required": False, "schemes": []},
+        "tools": [
+            {"name": t["name"], "description": t.get("description", ""),
+             "inputSchema": t.get("inputSchema", {"type": "object"})}
+            for t in TOOLS
+        ],
+        "resources": [],
+        "prompts": [],
+    }
