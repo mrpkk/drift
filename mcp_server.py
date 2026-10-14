@@ -182,16 +182,19 @@ def _drift_session(args: dict[str, Any]) -> dict[str, Any]:
 def _drift_explain(_: dict[str, Any]) -> dict[str, Any]:
     return {
         "order_matters": True,
+        # Объяснения отдаются агенту и читаются моделью — язык английский.
+        # Русский текст здесь не находится поиском в каталоге и хуже
+        # понимается моделью, как и описания инструментов.
         "rules": [
-            {"n": 1, "rule": "amount", "why": "превышение лимита — самая частая форма дрейфа"},
-            {"n": 2, "rule": "payee", "why": "получатель не тот, что в мандате"},
-            {"n": 3, "rule": "audience", "why": "платёж уходит чужому получателю"},
-            {"n": 4, "rule": "currency", "why": "валюта подменена"},
-            {"n": 5, "rule": "window", "why": "вне срока действия мандата"},
-            {"n": 6, "rule": "intent", "why": "намерение не входит в разрешённый список"},
+            {"n": 1, "rule": "amount", "why": "the limit is exceeded — the most likely form of drift"},
+            {"n": 2, "rule": "payee", "why": "the payee is not the one named in the mandate"},
+            {"n": 3, "rule": "audience", "why": "the payment is leaving for an unintended recipient"},
+            {"n": 4, "rule": "currency", "why": "the currency was substituted"},
+            {"n": 5, "rule": "window", "why": "outside the mandate's validity window"},
+            {"n": 6, "rule": "intent", "why": "the intent is not on the permitted list"},
         ],
         "default": "DENY",
-        "principle": "правило проверяется ДО действия, а не после",
+        "principle": "the rule is checked BEFORE the action, not after",
     }
 
 
