@@ -45,6 +45,64 @@ __version__ = "0.1.0"
 HEALTH_PATH = "/health"
 
 
+LANDING = """<!doctype html><html lang="en"><head><meta charset=utf-8>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>drift — mandate enforcement for AI agents (MCP)</title>
+<meta name="description" content="An MCP server that decides whether an agent was allowed to do what it did. Blocks the action instead of returning a flag nobody checks.">
+<link rel="canonical" href="https://drift.rta.lat/">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication",
+"name":"drift","applicationCategory":"DeveloperApplication",
+"operatingSystem":"Any",
+"description":"MCP server enforcing mandates for AI agents: it blocks a call that was not permitted rather than returning a verdict the caller may forget to read.",
+"url":"https://drift.rta.lat/",
+"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+</script>
+<style>
+:root{--bg:#0b0d12;--fg:#e8ecf4;--dim:#98a2b3;--line:#1e2430;--acc:#58a6ff;--ok:#3fb950}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,sans-serif;
+ max-width:760px;margin:60px auto;padding:0 24px}
+h1{font-size:28px;line-height:1.25;margin:0 0 8px}
+h2{font-size:18px;margin:32px 0 8px}
+p{color:var(--dim);margin:0 0 14px}
+code,pre{background:#141821;border-radius:6px;padding:2px 7px;
+ font-family:ui-monospace,SFMono-Regular,monospace;font-size:14px}
+pre{padding:14px;overflow-x:auto;margin:0 0 14px}
+a{color:var(--acc)}
+.card{border:1px solid var(--line);border-radius:10px;padding:16px 18px;
+ margin:0 0 12px}
+.tag{color:var(--ok);font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+</style></head><body>
+<main>
+<h1>drift — did the agent have the right to do that?</h1>
+<p>An MCP server that enforces <strong>mandates</strong> for AI agents.
+It blocks the call that was not permitted, instead of returning a
+verdict the caller may forget to read.</p>
+
+<div class="card">
+<span class="tag">The difference</span>
+<p style="margin:8px 0 0">Most checks return <code>verdict: ALLOW</code>
+and leave enforcement to the caller. With <code>enforce=true</code>, drift
+stops the flow itself.</p>
+</div>
+
+<h2>Connect</h2>
+<pre><code>https://drift.rta.lat/mcp</code></pre>
+
+<h2>Price</h2>
+<div class="card">
+<p style="margin:0">100 free checks per day. Then 0.005 USDC per call on
+Base mainnet over x402. No account, no card, no SDK.</p>
+</div>
+
+<h2>Try before you install</h2>
+<p>The server runs against your own endpoint. Standard library only,
+Python 3.11+.</p>
+<p><a href="https://indra.rta.lat/">See it in the Indra showcase</a></p>
+</main></body></html>"""
+
+
 def _base_url() -> str:
     """Публичный адрес: в sitemap обязаны быть абсолютные URL."""
     import os
@@ -179,7 +237,11 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, _sitemap().encode("utf-8"),
                        {"X-Content-Type": "application/xml; charset=utf-8"})
             return
-        if self.path.rstrip("/") in (MCP_PATH, ""):
+        if self.path.rstrip("/") == "":
+            self._send(200, LANDING.encode("utf-8"),
+                       {"X-Content-Type": "text/html; charset=utf-8"})
+            return
+        if self.path.rstrip("/") == MCP_PATH:
             self._send(200, json.dumps(
                 {"server": "drift", "transport": "streamable-http", "path": MCP_PATH},
                 ensure_ascii=False).encode())
