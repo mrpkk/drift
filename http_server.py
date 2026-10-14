@@ -45,6 +45,30 @@ __version__ = "0.1.0"
 HEALTH_PATH = "/health"
 
 
+def _base_url() -> str:
+    """Публичный адрес: в sitemap обязаны быть абсолютные URL."""
+    import os
+    return os.environ.get("DRIFT_BASE_URL",
+                          "https://drift.rta.lat").rstrip("/")
+
+
+def _robots() -> str:
+    """Краулеров пускаем: индексация витрины — это трафик."""
+    return ("User-agent: *\n"
+            "Allow: /\n"
+            "Disallow: /mcp\n"
+            f"Sitemap: {_base_url()}/sitemap.xml\n")
+
+
+def _sitemap() -> str:
+    """Карта сайта: документы, а не endpoints."""
+    base = _base_url()
+    urls = "".join(
+        f"<url><loc>{base}{page}</loc></url>" for page in ("", "/health"))
+    return ('<?xml version="1.0" encoding="UTF-8"?>'
+            '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
+            f"{urls}</urlset>")
+
 class Handler(BaseHTTPRequestHandler):
     def _send(self, status: int, body: bytes, headers: dict[str, str] | None = None) -> None:
         self.send_response(status)
@@ -146,6 +170,14 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, json.dumps(
                 {"status": "ok", "service": "drift", "version": __version__},
                 ensure_ascii=False).encode())
+            return
+        if self.path.rstrip("/") == "/robots.txt":
+            self._send(200, _robots().encode("utf-8"),
+                       {"X-Content-Type": "text/plain; charset=utf-8"})
+            return
+        if self.path.rstrip("/") == "/sitemap.xml":
+            self._send(200, _sitemap().encode("utf-8"),
+                       {"X-Content-Type": "application/xml; charset=utf-8"})
             return
         if self.path.rstrip("/") in (MCP_PATH, ""):
             self._send(200, json.dumps(
