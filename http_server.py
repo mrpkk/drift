@@ -274,6 +274,15 @@ class Handler(BaseHTTPRequestHandler):
                 {"status": "ok", "service": "drift", "version": __version__},
                 ensure_ascii=False).encode())
             return
+        if self.path.rstrip("/") == "/.well-known/glama.json":
+            from mcp_server import glama_claim
+            card = glama_claim()
+            if card:
+                self._send(200, json.dumps(card).encode("utf-8"),
+                           {"X-Content-Type": "application/json; charset=utf-8"})
+            else:
+                self._send(404, b'{"error":"claim token not configured"}')
+            return
         if self.path.rstrip("/") == "/.well-known/mcp/server-card.json":
             from mcp_server import server_card
             self._send(200, json.dumps(server_card()).encode("utf-8"),

@@ -291,3 +291,20 @@ def server_card() -> dict:
         "resources": [],
         "prompts": [],
     }
+
+
+def glama_claim() -> dict:
+    """Подтверждение владения доменом для каталога Glama.
+
+    Токен показывается в интерфейсе Glama и публикуется по
+    /.well-known/glama.json. Живёт в конфигурации, а не в коде: Glama
+    перепроверяет файл ежедневно.
+    """
+    import os
+    token = os.environ.get("GLAMA_CLAIM_TOKEN", "").strip()
+    if not token:
+        return {}
+    return {
+        "$schema": "https://glama.ai/mcp/schemas/connector.json",
+        "claim": token,
+    }
