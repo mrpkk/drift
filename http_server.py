@@ -31,6 +31,33 @@ X402_FACILITATOR_ENV = "DRIFT_X402_FACILITATOR"
 DEFAULT_HOST = "127.0.0.1"  # сетевой доступ — только через явный --host
 
 
+# Методы MCP, не тратящие квоту: обнаружение, а не работа.
+FREE_METHODS = frozenset({
+    "initialize", "tools/list", "resources/list", "prompts/list",
+    "ping", "notifications/initialized", "notifications/cancelled",
+})
+
+
+def _is_free_method(raw: bytes) -> bool:
+    """Бесплатна ли операция. Не разобрали — считаем платной.
+
+    Ошибка в сторону платности безопаснее: бесплатным по ошибке станет
+    вызов работы, и квота перестанет что-либо ограничивать.
+    """
+    try:
+        payload = json.loads(raw.decode("utf-8", "ignore") or "{}")
+    except (ValueError, TypeError):
+        return False
+    if isinstance(payload, list):
+        # Пустой список — не «всё бесплатное»: all() на пустом даёт True,
+        # и пустой батч обходил бы квоту. Требуем непустой разбор.
+        if not payload:
+            return False
+        return all(isinstance(p, dict) and p.get("method") in FREE_METHODS
+                   for p in payload)
+    return isinstance(payload, dict) and payload.get("method") in FREE_METHODS
+
+
 def log(message: str) -> None:
     """Единственная строка в stdout: systemd должен видеть, что сервер поднялся.
 
@@ -157,6 +184,25 @@ class Handler(BaseHTTPRequestHandler):
             status, body, extra = self._settle(payment)
             self._send(status, body, extra)
             return
+        # Тело читаем ДО проверки квоты: нужно знать метод. Рукопожатие
+        # (initialize) и перечисление инструментов (tools/list) лимит не
+        # тратят. Иначе каталог, проверяющий нас ежечасно, оплачивает
+        # квотой право узнать, что мы существуем, и при исчерпании
+        # помечает сервер нерабочим. Glama получила HTTP 402 именно так и
+        # опустила нас ниже здоровых серверов в выдаче.
+        #
+        # Платной остаётся работа: tools/call. Обнаружение бесплатно.
+        n = int(self.headers.get("Content-Length") or 0)
+        raw = self.rfile.read(n)
+        if _is_free_method(raw):
+            out = respond(raw)
+            if out is None:
+                self._send(202, b"")
+                return
+            status, body = out
+            self._send(status, body)
+            return
+
         if LIMITER is not None:
             decision = LIMITER.check(client_key(self.headers, self.client_address))
             if not decision.allowed:
@@ -185,8 +231,7 @@ class Handler(BaseHTTPRequestHandler):
                                "coming; the mandate check itself is unchanged.",
                 }, ensure_ascii=False).encode(), decision.headers())
                 return
-        n = int(self.headers.get("Content-Length") or 0)
-        out = respond(self.rfile.read(n))
+        out = respond(raw)
         if out is None:
             self._send(202, b"", decision.headers() if LIMITER is not None else None)
             return

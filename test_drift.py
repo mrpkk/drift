@@ -133,5 +133,52 @@ class TestMandateIsImmutable(unittest.TestCase):
             m.max_amount_minor = 999_999
 
 
+class FreeMethodTests(unittest.TestCase):
+    """Рукопожатие и обнаружение не должны тратить квоту.
+
+    Регрессия: Glama проверяет сервер ежечасно, рукопожатие стоило
+    запрос квоты, при исчерпании приходил HTTP 402 — и каталог помечал
+    сервер нерабочим, опуская его ниже здоровых в выдаче.
+    """
+
+    def test_handshake_is_free(self):
+        from http_server import _is_free_method
+        self.assertTrue(_is_free_method(
+            b'{"jsonrpc":"2.0","id":1,"method":"initialize"}'))
+
+    def test_tool_listing_is_free(self):
+        from http_server import _is_free_method
+        self.assertTrue(_is_free_method(
+            b'{"jsonrpc":"2.0","id":2,"method":"tools/list"}'))
+
+    def test_discovery_kinds_are_free(self):
+        from http_server import _is_free_method
+        for m in (b'resources/list', b'prompts/list', b'ping'):
+            payload = b'{"jsonrpc":"2.0","id":1,"method":"' + m + b'"}'
+            self.assertTrue(_is_free_method(payload), m)
+
+    def test_actual_work_is_charged(self):
+        # Работа платной и остаётся: иначе квота ничего не ограничивает.
+        from http_server import _is_free_method
+        self.assertFalse(_is_free_method(
+            b'{"jsonrpc":"2.0","id":3,"method":"tools/call"}'))
+
+    def test_unparseable_counts_as_paid(self):
+        # Ошибка в сторону платности безопаснее: не распознали — считаем
+        # работой, а не наоборот.
+        from http_server import _is_free_method
+        for raw in (b"garbage", b"", b"[]", b'{"jsonrpc":"2.0"}'):
+            self.assertFalse(_is_free_method(raw), raw)
+
+    def test_batch_is_free_only_if_all_free(self):
+        from http_server import _is_free_method
+        allfree = (b'[{"jsonrpc":"2.0","id":1,"method":"initialize"},'
+                   b'{"jsonrpc":"2.0","id":2,"method":"tools/list"}]')
+        mixed = (b'[{"jsonrpc":"2.0","id":1,"method":"initialize"},'
+                 b'{"jsonrpc":"2.0","id":2,"method":"tools/call"}]')
+        self.assertTrue(_is_free_method(allfree))
+        self.assertFalse(_is_free_method(mixed))
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
+
