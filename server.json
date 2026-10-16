@@ -12,7 +12,7 @@
   "remotes": [
     {
       "type": "streamable-http",
-      "url": "https://REPLACE_WITH_DEPLOY_URL/mcp"
+      "url": "https://drift.rta.lat/mcp"
     }
   ]
 }
