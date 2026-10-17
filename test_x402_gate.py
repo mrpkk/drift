@@ -78,7 +78,9 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(PaymentConfig(pay_to=PAY_TO).network,
                          NETWORK_BASE_SEPOLIA_V1)
         self.assertEqual(PaymentConfig(pay_to=PAY_TO, network=NETWORK_BASE_SEPOLIA,
-                                      version=2).network, NETWORK_BASE_SEPOLIA)
+                                      version=2,
+                                      resource="https://drift.example/mcp").network,
+                          NETWORK_BASE_SEPOLIA)
 
     def test_default_price_matches_documented_economics(self):
         self.assertEqual(PaymentConfig(pay_to=PAY_TO).price_atoms, 5000)
@@ -463,7 +465,8 @@ class TestFacilitatorMatrix(unittest.TestCase):
             PaymentConfig(pay_to=PAY_TO, network=NETWORK_BASE_SEPOLIA)
 
     def test_v2_on_sepolia_is_allowed(self):
-        cfg = PaymentConfig(pay_to=PAY_TO, network=NETWORK_BASE_SEPOLIA, version=2)
+        cfg = PaymentConfig(pay_to=PAY_TO, network=NETWORK_BASE_SEPOLIA, version=2,
+                            resource="https://drift.example/mcp")
         self.assertEqual(cfg.version, 2)
 
     def test_custom_facilitator_may_serve_mainnet(self):
@@ -628,7 +631,7 @@ class TestV2ChallengeShape(unittest.TestCase):
     def _v2_config(self):
         return PaymentConfig(pay_to=self.PAY, network=NETWORK_BASE_SEPOLIA,
                              version=2, asset=USDC_BASE_SEPOLIA,
-                             resource="drift:/mcp")
+                             resource="https://drift.example/mcp")
 
     def test_v2_config_is_accepted_by_the_guard(self):
         cfg = self._v2_config()          # не должно бросить исключение
@@ -643,7 +646,7 @@ class TestV2ChallengeShape(unittest.TestCase):
     def test_v2_resource_is_an_object_at_top_level(self):
         body = challenge_body(self._v2_config(), "n1")
         self.assertIsInstance(body["resource"], dict)
-        self.assertEqual(body["resource"]["url"], "drift:/mcp")
+        self.assertEqual(body["resource"]["url"], "https://drift.example/mcp")
         self.assertIn("description", body["resource"])
         self.assertIn("mimeType", body["resource"])
 
@@ -679,7 +682,7 @@ class TestV2EndToEnd(unittest.TestCase):
     def test_v2_payment_from_our_own_challenge_is_accepted(self):
         gate = X402Gate(PaymentConfig(
             pay_to=self.PAY, network=NETWORK_BASE_SEPOLIA, version=2,
-            asset=USDC_BASE_SEPOLIA, resource="drift:/mcp"))
+            asset=USDC_BASE_SEPOLIA, resource="https://drift.example/mcp"))
         nonce = gate.issue_nonce()
         challenge = challenge_body(gate.config, nonce)
         accepts = challenge["accepts"][0]
@@ -689,7 +692,7 @@ class TestV2EndToEnd(unittest.TestCase):
             "accepted": {
                 "scheme": accepts["scheme"],
                 "network": accepts["network"],
-                "maxAmountRequired": accepts["maxAmountRequired"],
+                "amount": accepts["amount"],
                 "payTo": accepts["payTo"],
                 "asset": accepts["asset"],
                 "extra": accepts["extra"],
@@ -721,7 +724,7 @@ class TestV2EndToEnd(unittest.TestCase):
         real = mod._post_facilitator
         mod._post_facilitator = spy
         try:
-            settlement = gate.verify(b64url(presented), "drift:/mcp")
+            settlement = gate.verify(b64url(presented), "https://drift.example/mcp")
         finally:
             mod._post_facilitator = real
 
@@ -734,13 +737,13 @@ class TestV2EndToEnd(unittest.TestCase):
         """Одна оплата — одно предъявление."""
         gate = X402Gate(PaymentConfig(
             pay_to=self.PAY, network=NETWORK_BASE_SEPOLIA, version=2,
-            asset=USDC_BASE_SEPOLIA, resource="drift:/mcp"))
+            asset=USDC_BASE_SEPOLIA, resource="https://drift.example/mcp"))
         nonce = gate.issue_nonce()
         accepts = challenge_body(gate.config, nonce)["accepts"][0]
         presented = {
             "x402Version": 2,
             "accepted": {"scheme": "exact", "network": accepts["network"],
-                         "maxAmountRequired": accepts["maxAmountRequired"],
+                         "amount": accepts["amount"],
                          "payTo": self.PAY, "asset": accepts["asset"],
                          "extra": accepts["extra"]},
             "payload": {"signature": "0x" + "11" * 65,
@@ -759,9 +762,9 @@ class TestV2EndToEnd(unittest.TestCase):
 
         mod._post_facilitator = _fake
         try:
-            gate.verify(b64url(presented), "drift:/mcp")
+            gate.verify(b64url(presented), "https://drift.example/mcp")
             with self.assertRaises(ValueError):
-                gate.verify(b64url(presented), "drift:/mcp")
+                gate.verify(b64url(presented), "https://drift.example/mcp")
         finally:
             mod._post_facilitator = real
 
@@ -815,3 +818,134 @@ class TestNonceStateSurvivesRestart:
         nonce = gate.issue_nonce()
         assert gate._reserve(nonce) is True
         assert not list(tmp_path.iterdir())
+
+
+class TestBazaarDeclaration(unittest.TestCase):
+    """Каталог PayAI: без декларации ``bazaar`` ресурс не листингуется вовсе.
+
+    Проверено вживую 17.10.2026: у drift 0 записей в каталоге, у всех 85
+    MCP-записей декларация есть. Форма — с живой записи ``type=mcp``.
+    """
+
+    def _config(self, version: int = 2) -> PaymentConfig:
+        return PaymentConfig(
+            pay_to="0x" + "aa" * 20,
+            version=version,
+            network=NETWORK_BASE,
+            facilitator_url="https://facilitator.payai.network",
+            resource="https://drift.example/mcp" if version >= 2 else "drift:/mcp",
+        )
+
+    def _tool(self) -> dict:
+        return next(t for t in http_server.TOOLS if t.get("name") == "drift_check")
+
+    def test_declaration_carries_tool(self):
+        body = x402_gate.challenge_body(self._config(), "n1", self._tool())
+        info = body["extensions"]["bazaar"]["info"]
+        self.assertEqual(info["input"]["type"], "mcp")
+        self.assertEqual(info["input"]["toolName"], "drift_check")
+        self.assertIn("inputSchema", info["input"])
+        self.assertEqual(info["output"]["type"], "json")
+
+    def test_schema_is_the_catalog_shape(self):
+        body = x402_gate.challenge_body(self._config(), "n1", self._tool())
+        schema = body["extensions"]["bazaar"]["schema"]
+        self.assertEqual(
+            schema["properties"]["input"]["properties"]["type"]["const"], "mcp"
+        )
+
+    def test_service_metadata_present_and_bounded(self):
+        body = x402_gate.challenge_body(self._config(), "n1", self._tool())
+        self.assertEqual(body["resource"]["serviceName"], x402_gate.BAZAAR_SERVICE_NAME)
+        self.assertLessEqual(len(body["resource"]["serviceName"]), 32)
+        self.assertLessEqual(len(body["resource"]["tags"]), 5)
+
+    def test_no_tool_no_declaration(self):
+        body = x402_gate.challenge_body(self._config(), "n1")
+        self.assertNotIn("extensions", body)
+
+    def test_v1_stays_clean(self):
+        body = x402_gate.challenge_body(self._config(version=1), "n1", self._tool())
+        self.assertNotIn("extensions", body)
+
+    def test_challenge_header_carries_declaration(self):
+        headers = x402_gate.challenge_headers(self._config(), "n1", self._tool())
+        raw = base64.urlsafe_b64decode(headers["payment-required"] + "==")
+        self.assertIn("extensions", json.loads(raw))
+
+    def test_request_tool_extraction(self):
+        raw = json.dumps(
+            {"method": "tools/call", "params": {"name": "drift_session"}}
+        ).encode()
+        tool = http_server._request_tool(raw)
+        self.assertEqual(tool["name"], "drift_session")
+        self.assertIsNone(http_server._request_tool(b"{broken"))
+        self.assertIsNone(http_server._request_tool(b"{}"))
+
+
+class TestV2RequirementsShape(unittest.TestCase):
+    """v2-требования не должны нести v1-поле maxAmountRequired.
+
+    Проверено вживую 17.10.2026 против facilitator.payai.network/verify:
+    с полем — invalid_payment_requirements, без — доходит до проверки подписи.
+    """
+
+    def _cfg(self):
+        return PaymentConfig(
+            pay_to="0x" + "aa" * 20, version=2, network=NETWORK_BASE,
+            facilitator_url="https://facilitator.payai.network",
+            resource="https://drift.example/mcp",
+        )
+
+    def test_challenge_accepts_has_no_v1_field(self):
+        body = challenge_body(self._cfg(), "n1")
+        self.assertNotIn("maxAmountRequired", body["accepts"][0])
+        self.assertIn("amount", body["accepts"][0])
+
+    def test_v1_requirement_still_has_the_field(self):
+        cfg = PaymentConfig(pay_to="0x" + "aa" * 20, version=1)
+        body = challenge_body(cfg, "n1")
+        self.assertIn("maxAmountRequired", body["accepts"][0])
+
+    def test_verify_sends_v2_clean_requirements(self):
+        gate = X402Gate(self._cfg())
+        nonce = gate.issue_nonce()
+        accepts = challenge_body(gate.config, nonce)["accepts"][0]
+        presented = {
+            "x402Version": 2,
+            "accepted": {**accepts,
+                         "maxTimeoutSeconds": accepts.get("maxTimeoutSeconds", 60)},
+            "payload": {"signature": "0x" + "11" * 65,
+                        "authorization": {"from": "0x" + "9c" * 20,
+                                          "to": accepts["payTo"],
+                                          "value": accepts["amount"],
+                                          "validAfter": "0",
+                                          "validBefore": "9999999999",
+                                          "nonce": nonce}},
+        }
+        seen = {}
+
+        def spy(url, path, payload):
+            seen[path] = payload
+            if path.endswith("/settle"):
+                return {"success": True, "transaction": "0xdead",
+                        "payer": accepts["payTo"]}
+            return {"isValid": True, "payer": accepts["payTo"],
+                    "amount": accepts["amount"]}
+
+        import x402_gate as mod
+        real = mod._post_facilitator
+        mod._post_facilitator = spy
+        try:
+            with mock.patch.object(gate, "_commit"):
+                gate.verify(b64url(presented), "https://drift.example/mcp")
+        finally:
+            mod._post_facilitator = real
+        for path in ("/verify", "/settle"):
+            self.assertNotIn("maxAmountRequired",
+                             seen[path]["paymentRequirements"],
+                             f"{path} несёт v1-поле")
+
+
+if __name__ == "__main__":
+    unittest.main()

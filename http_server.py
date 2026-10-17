@@ -11,7 +11,7 @@ import pathlib
 import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from mcp_server import respond
+from mcp_server import TOOLS, respond
 from ratelimit import DAY_SECONDS, RateLimiter, client_key
 from x402_gate import (
     HEADER_PAYMENT,
@@ -32,6 +32,8 @@ X402_FACILITATOR_ENV = "DRIFT_X402_FACILITATOR"
 # Куда класть выданные и потраченные nonce. Без этого перезапуск
 # возвращал потраченный nonce к жизни: один платёж — две услуги.
 X402_STATE_DIR_ENV = "DRIFT_STATE_DIR"
+X402_VERSION_ENV = "DRIFT_X402_VERSION"
+X402_RESOURCE_ENV = "DRIFT_X402_RESOURCE"
 DEFAULT_HOST = "127.0.0.1"  # сетевой доступ — только через явный --host
 
 
@@ -40,6 +42,23 @@ FREE_METHODS = frozenset({
     "initialize", "tools/list", "resources/list", "prompts/list",
     "ping", "notifications/initialized", "notifications/cancelled",
 })
+
+
+def _request_tool(raw: bytes) -> dict | None:
+    """Инструмент, который вызывает клиент, — для декларации Bazaar.
+
+    Каталог PayAI ведёт запись на пару ``(resource, toolName)``; без имени
+    инструмента объявление не построить, поэтому 402 уносит его с собой.
+    """
+    try:
+        msg = json.loads(raw or b"{}")
+    except ValueError:
+        return None
+    params = msg.get("params") if isinstance(msg, dict) else None
+    name = params.get("name") if isinstance(params, dict) else None
+    if not isinstance(name, str):
+        return None
+    return next((tool for tool in TOOLS if tool.get("name") == name), None)
 
 
 def _is_free_method(raw: bytes) -> bool:
@@ -222,7 +241,8 @@ class Handler(BaseHTTPRequestHandler):
                                    f"{GATE.config.network} and retry with an "
                                    f"{HEADER_PAYMENT} header.",
                     }, ensure_ascii=False).encode(),
-                        {**challenge_headers(GATE.config, nonce),
+                        {**challenge_headers(GATE.config, nonce,
+                                             _request_tool(raw)),
                          "Retry-After": str(decision.retry_after)})
                     return
                 self._send(429, json.dumps({
@@ -333,6 +353,12 @@ def main() -> None:
         state_dir = os.environ.get(X402_STATE_DIR_ENV, "").strip()
         if state_dir:
             kwargs["state_path"] = str(pathlib.Path(state_dir) / "payments.json")
+        version = os.environ.get(X402_VERSION_ENV, "").strip()
+        if version:
+            kwargs["version"] = int(version)
+        resource = os.environ.get(X402_RESOURCE_ENV, "").strip()
+        if resource:
+            kwargs["resource"] = resource
         GATE = X402Gate(PaymentConfig(**kwargs))
     if os.environ.get(DISABLE_RATE_LIMIT_ENV) != "1":
         LIMITER = RateLimiter(limit=FREE_TIER_PER_DAY, window_seconds=DAY_SECONDS)

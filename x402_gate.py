@@ -39,6 +39,8 @@ never used. ``0.005`` USDC is ``5000`` atoms, not ``0.0050000000000000001``.
 
 from __future__ import annotations
 
+import re
+
 import json
 import pathlib
 import threading
@@ -63,6 +65,79 @@ __all__ = [
 ]
 
 DEFAULT_FACILITATOR = "https://x402.org/facilitator"
+
+# ── Декларация Bazaar (каталог PayAI) ──────────────────────────────────────
+# Форма взята с живой записи каталога (subpay.ai/invoice/mcp, v2) 17.10.2026:
+# facilitator.payai.network/discovery/resources?type=mcp. Без этой декларации
+# ресурс не попадает в каталог вовсе — проверено: у drift 0 записей, у всех
+# 85 MCP-записей каталога декларация есть.
+BAZAAR_SERVICE_NAME = "drift"
+BAZAAR_TAGS = ["mandate", "compliance", "agent-safety", "x402"]
+BAZAAR_DESCRIPTION = (
+    "Continuous mandate enforcement for AI agents: every proposed action is "
+    "checked against a signed mandate before it happens."
+)
+
+# Схема, которой фасилитатор валидирует наше info (из живой записи каталога).
+BAZAAR_EXTENSION_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "required": ["input"],
+    "properties": {
+        "input": {
+            "type": "object",
+            "required": ["type", "toolName", "inputSchema"],
+            "properties": {
+                "type": {"type": "string", "const": "mcp"},
+                "toolName": {"type": "string"},
+                "description": {"type": "string"},
+                "inputSchema": {"type": "object"},
+            },
+            "additionalProperties": False,
+        },
+        "output": {
+            "type": "object",
+            "required": ["type"],
+            "properties": {
+                "type": {"type": "string"},
+                "example": {"type": "object"},
+            },
+        },
+    },
+}
+
+
+def bazaar_declaration(tool: "Mapping[str, Any] | None") -> dict[str, Any] | None:
+    """Расширение ``bazaar`` для одного MCP-инструмента — или None.
+
+    Каталог ведёт ключ ``(resource, toolName)``: у drift три инструмента,
+    значит у каждого своя запись. Декларация идёт в тело 402-ответа (v2),
+    клиент эхом возвращает её в платёжном payload, фасилитатор каталогизирует.
+    """
+    if not isinstance(tool, Mapping):
+        return None
+    name = tool.get("name")
+    schema = tool.get("inputSchema")
+    if not isinstance(name, str) or not name or not isinstance(schema, Mapping):
+        return None
+    description = tool.get("description")
+    return {
+        "bazaar": {
+            "info": {
+                "input": {
+                    "type": "mcp",
+                    "toolName": name,
+                    "description": (str(description)[:1024] if description else ""),
+                    "inputSchema": dict(schema),
+                },
+                "output": {
+                    "type": "json",
+                    "example": {"verdict": "ALLOW", "rule": "amount"},
+                },
+            },
+            "schema": BAZAAR_EXTENSION_SCHEMA,
+        }
+    }
 
 #: Price of one mandate check. 0.005 USDC, matching the measured unit economics in
 #: MONETIZATION.md: a Base transaction costs ~$0.00146, so the rail takes ~29 %.
@@ -157,6 +232,14 @@ class PaymentConfig:
     version: int = X402_VERSION
 
     def __post_init__(self) -> None:
+        if self.version >= 2 and not re.match(r"^https?://", self.resource):
+            # Каталог PayAI отбрасывает относительные и чужие схемы
+            # (resource_url_invalid / resource_scheme_not_allowed) — ресурс
+            # молча выпадает из выдачи. Лучше упасть на старте.
+            raise ValueError(
+                f"resource {self.resource!r} must be an absolute http(s) URL "
+                "for x402 v2 (Bazaar rejects other shapes)"
+            )
         if self.network not in SUPPORTED_NETWORKS:
             raise ValueError(
                 f"unsupported network {self.network!r}; expected one of {SUPPORTED_NETWORKS}"
@@ -210,7 +293,8 @@ def build_requirement(config: PaymentConfig, nonce: str) -> dict[str, Any]:
     }
 
 
-def challenge_body(config: PaymentConfig, nonce: str) -> dict[str, Any]:
+def challenge_body(config: PaymentConfig, nonce: str,
+                   tool: Mapping[str, Any] | None = None) -> dict[str, Any]:
     """The JSON body of a 402 response, in the shape the version demands.
 
     **v1:** ``resource`` is a string inside ``accepts[0]``.
@@ -228,23 +312,35 @@ def challenge_body(config: PaymentConfig, nonce: str) -> dict[str, Any]:
     accepts = build_requirement(config, nonce)
     if config.version >= 2:
         resource = accepts.pop("resource")
-        return {
+        # maxAmountRequired — поле v1. В v2-запросе фасилитатор видит его,
+        # классифицирует требования как v1 и отвечает
+        # invalid_payment_requirements. Проверено вживую 17.10.2026:
+        # с полем — отказ, без поля — доходит до проверки подписи.
+        accepts.pop("maxAmountRequired", None)
+        result: dict[str, Any] = {
             "x402Version": config.version,
             "resource": {
                 "url": resource,
                 "description": accepts.pop("description"),
                 "mimeType": accepts.pop("mimeType"),
+                "serviceName": BAZAAR_SERVICE_NAME,
+                "tags": list(BAZAAR_TAGS),
             },
             "accepts": [accepts],
         }
+        declaration = bazaar_declaration(tool)
+        if declaration is not None:
+            result["extensions"] = declaration
+        return result
     return {"x402Version": config.version, "accepts": [accepts]}
 
 
-def challenge_headers(config: PaymentConfig, nonce: str) -> dict[str, str]:
+def challenge_headers(config: PaymentConfig, nonce: str,
+                      tool: Mapping[str, Any] | None = None) -> dict[str, str]:
     """Headers of a 402 response, with the challenge base64url-encoded per spec."""
     import base64
 
-    raw = json.dumps(challenge_body(config, nonce), separators=(",", ":")).encode()
+    raw = json.dumps(challenge_body(config, nonce, tool), separators=(",", ":")).encode()
     encoded = base64.urlsafe_b64encode(raw).decode().rstrip("=")
     return {
         HEADER_CHALLENGE: encoded,
@@ -459,12 +555,16 @@ class X402Gate:
             raise ValueError("nonce already spent")
 
         try:
+            wire_requirements = dict(expected)
+            if config.version >= 2:
+                # См. challenge_body: в v2-запросе v1-поле ломает валидацию.
+                wire_requirements.pop("maxAmountRequired", None)
             result = _post_facilitator(config.facilitator_url, "/verify", {
                 "x402Version": config.version,
                 "paymentPayload": presented,
                 # Имя поля — paymentRequirements. Прежнее `requirements`
                 # фасилитатор отвергал целиком: HTTP 400 missing_parameters.
-                "paymentRequirements": expected,
+                "paymentRequirements": wire_requirements,
             })
         except (urllib.error.URLError, OSError, ValueError) as exc:
             # The nonce is released, not burned: we do not know whether the money moved,
@@ -508,7 +608,7 @@ class X402Gate:
             settled_result = _post_facilitator(config.facilitator_url, "/settle", {
                 "x402Version": config.version,
                 "paymentPayload": presented,
-                "paymentRequirements": expected,
+                "paymentRequirements": wire_requirements,
             })
         except (urllib.error.URLError, OSError, ValueError) as exc:
             # Nonce не сжигаем: неизвестно, ушла ли транзакция.
