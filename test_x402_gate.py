@@ -768,3 +768,50 @@ class TestV2EndToEnd(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestNonceStateSurvivesRestart:
+    """Перезапуск не должен возвращать потраченный nonce к жизни.
+
+    До 17.10.2026 множества `_spent` и `_issued` жили только в памяти:
+    гейт перезапускался — и подпись, за которую уже заплатили, принималась
+    второй раз. Выданные nonce тоже терялись, и честный плательщик получал
+    отказ «nonce не выдавался».
+    """
+
+    def _cfg(self, tmp_path):
+        return PaymentConfig(pay_to=PAY_TO, resource="drift:/mcp",
+                             state_path=str(tmp_path / "payments.json"))
+
+    def test_spent_nonce_survives_restart(self, tmp_path):
+        cfg = self._cfg(tmp_path)
+        first = X402Gate(cfg)
+        nonce = first.issue_nonce()
+        assert first._reserve(nonce) is True
+        first._commit(nonce)
+
+        second = X402Gate(cfg)          # как после перезапуска
+        assert second._reserve(nonce) is False, (
+            "потраченный nonce снова свободен — платёж принимается дважды")
+
+    def test_issued_nonce_survives_restart(self, tmp_path):
+        """Клиент мог получить челлендж до перезапуска, оплатить после."""
+        cfg = self._cfg(tmp_path)
+        first = X402Gate(cfg)
+        nonce = first.issue_nonce()
+
+        second = X402Gate(cfg)
+        assert second.requirement_for(nonce) is not None, (
+            "выданный nonce потерян — честный плательщик получит отказ")
+
+    def test_corrupt_state_does_not_break_gate(self, tmp_path):
+        path = tmp_path / "payments.json"
+        path.write_text("{не json", encoding="utf-8")
+        gate = X402Gate(self._cfg(tmp_path))      # не должно бросить
+        assert gate.issue_nonce()
+
+    def test_without_path_behaves_as_before(self, tmp_path):
+        gate = X402Gate(PaymentConfig(pay_to=PAY_TO, resource="drift:/mcp"))
+        nonce = gate.issue_nonce()
+        assert gate._reserve(nonce) is True
+        assert not list(tmp_path.iterdir())

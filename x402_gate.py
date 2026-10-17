@@ -40,7 +40,9 @@ never used. ``0.005`` USDC is ``5000`` atoms, not ``0.0050000000000000001``.
 from __future__ import annotations
 
 import json
+import pathlib
 import threading
+import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass, field
@@ -147,6 +149,10 @@ class PaymentConfig:
     price: Decimal = PRICE_USDC
     resource: str = "drift:/mcp"
     settlement_header: str = HEADER_SETTLEMENT
+    # Куда класть выданные и потраченные nonce. Пусто — только память,
+    # как было до 17.10.2026: тогда перезапуск возвращал потраченный
+    # nonce к жизни, и один платёж принимался дважды.
+    state_path: str = ""
 
     version: int = X402_VERSION
 
@@ -335,6 +341,52 @@ class X402Gate:
         #: nonce -> "in flight", so two concurrent retries cannot both settle
         self._inflight: set[str] = set()
         self._max_tracked_nonces = 10_000
+        self._state_path = pathlib.Path(config.state_path) if config.state_path else None
+        self._last_save = 0.0
+        self._load_state()
+
+    # ------------------------------------------------------------ состояние
+
+    def _load_state(self) -> None:
+        """Вернуть выданные и потраченные nonce с прошлого запуска.
+
+        Выданные тоже нужны: клиент мог получить челлендж перед самым
+        перезапуском и оплатить после. Без них `requirement_for` вернёт
+        None, и честный платёж будет отвергнут как «nonce не выдавался».
+        """
+        if not self._state_path:
+            return
+        try:
+            data = json.loads(self._state_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return
+        if not isinstance(data, dict):
+            return
+        issued = data.get("issued")
+        if isinstance(issued, dict):
+            self._issued = {str(k): v for k, v in issued.items()
+                            if isinstance(v, dict)}
+        spent = data.get("spent")
+        if isinstance(spent, list):
+            self._spent = {str(n) for n in spent}
+
+    def _save_state(self, force: bool = False) -> None:
+        if not self._state_path:
+            return
+        now = time.time()
+        if not force and now - self._last_save < 1.0:
+            return
+        self._last_save = now
+        try:
+            self._state_path.parent.mkdir(parents=True, exist_ok=True)
+            tmp = self._state_path.with_suffix(".tmp")
+            tmp.write_text(json.dumps({
+                "issued": self._issued,
+                "spent": sorted(self._spent),
+            }, ensure_ascii=False), encoding="utf-8")
+            tmp.replace(self._state_path)
+        except OSError as exc:
+            print(f"drift: состояние оплаты не сохранено: {exc}")
 
     @property
     def config(self) -> PaymentConfig:
@@ -352,6 +404,7 @@ class X402Gate:
                 # a requirement, so verification rejects it rather than accepting it.
                 for stale in list(self._issued)[: len(self._issued) // 2]:
                     self._issued.pop(stale, None)
+        self._save_state()
         return nonce
 
     def requirement_for(self, nonce: str) -> dict[str, Any] | None:
@@ -376,6 +429,9 @@ class X402Gate:
         with self._lock:
             self._inflight.discard(nonce)
             self._spent.add(nonce)
+            # Трата — событие с денежными последствиями: пишем сразу,
+            # не дожидаясь троттлинга.
+            self._save_state(force=True)
 
     def verify(self, payment_header: str, resource: str) -> Settlement:
         """Verify a presented payment and return the settlement, or raise.

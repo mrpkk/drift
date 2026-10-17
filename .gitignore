@@ -7,3 +7,6 @@ build/
 dist/
 .tunnel.log
 .public_url
+
+# Состояние оплаты: nonce. Рантайм, не в git.
+.state/

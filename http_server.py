@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import json
 import os
+import pathlib
 import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
@@ -28,6 +29,9 @@ X402_ENABLED_ENV = "DRIFT_X402_ENABLED"
 X402_PAY_TO_ENV = "DRIFT_X402_PAY_TO"
 X402_NETWORK_ENV = "DRIFT_X402_NETWORK"
 X402_FACILITATOR_ENV = "DRIFT_X402_FACILITATOR"
+# Куда класть выданные и потраченные nonce. Без этого перезапуск
+# возвращал потраченный nonce к жизни: один платёж — две услуги.
+X402_STATE_DIR_ENV = "DRIFT_STATE_DIR"
 DEFAULT_HOST = "127.0.0.1"  # сетевой доступ — только через явный --host
 
 
@@ -326,6 +330,9 @@ def main() -> None:
         facilitator = os.environ.get(X402_FACILITATOR_ENV, "").strip()
         if facilitator:
             kwargs["facilitator_url"] = facilitator
+        state_dir = os.environ.get(X402_STATE_DIR_ENV, "").strip()
+        if state_dir:
+            kwargs["state_path"] = str(pathlib.Path(state_dir) / "payments.json")
         GATE = X402Gate(PaymentConfig(**kwargs))
     if os.environ.get(DISABLE_RATE_LIMIT_ENV) != "1":
         LIMITER = RateLimiter(limit=FREE_TIER_PER_DAY, window_seconds=DAY_SECONDS)
