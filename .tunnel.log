@@ -11153,3 +11153,257 @@
 {"level":"error","error":"TLS handshake with edge error: read tcp 198.18.0.1:41140->198.41.200.113:7844: i/o timeout","connIndex":0,"time":"2026-10-16T02:01:25Z","message":"Connection terminated"}
 {"level":"info","event":0,"ip":"198.41.200.53","connIndex":0,"time":"2026-10-16T02:01:41Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
 {"level":"info","event":0,"connection":"4ee5b9e3-db07-4b45-98c0-a69b6b30cae9","connIndex":0,"location":"ams01","ip":"198.41.200.53","protocol":"http2","time":"2026-10-16T02:01:44Z","message":"Registered tunnel connection"}
+{"level":"info","connIndex":0,"time":"2026-10-16T03:54:59Z","message":"Lost connection with the edge"}
+{"level":"error","error":"Error shutting down control stream: client disconnected","time":"2026-10-16T03:54:59Z","message":"failed to serve incoming request"}
+{"level":"error","event":0,"ip":"198.41.200.53","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T03:54:59Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.200.53","connIndex":0,"time":"2026-10-16T03:54:59Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T03:54:59Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.53","connIndex":0,"time":"2026-10-16T03:55:15Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"73e97cfd-f0a4-4e5c-bddb-7bbe7aee46af","connIndex":0,"location":"ams20","ip":"198.41.200.53","protocol":"http2","time":"2026-10-16T03:55:20Z","message":"Registered tunnel connection"}
+{"level":"info","connIndex":0,"time":"2026-10-16T05:00:25Z","message":"Lost connection with the edge"}
+{"level":"error","error":"Error shutting down control stream: client disconnected","time":"2026-10-16T05:00:25Z","message":"failed to serve incoming request"}
+{"level":"error","event":0,"ip":"198.41.200.53","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T05:00:25Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.200.53","connIndex":0,"time":"2026-10-16T05:00:25Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T05:00:25Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.53","connIndex":0,"time":"2026-10-16T05:00:31Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"error","event":0,"ip":"198.41.200.53","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:59674->198.41.200.53:7844: i/o timeout","time":"2026-10-16T05:00:46Z","message":"Unable to establish connection with Cloudflare edge"}
+{"level":"error","event":0,"ip":"198.41.200.53","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:59674->198.41.200.53:7844: i/o timeout","time":"2026-10-16T05:00:46Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.200.53","connIndex":0,"time":"2026-10-16T05:00:46Z","message":"Retrying connection in up to 4s"}
+{"level":"error","error":"TLS handshake with edge error: read tcp 198.18.0.1:59674->198.41.200.53:7844: i/o timeout","connIndex":0,"time":"2026-10-16T05:00:48Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.113","connIndex":0,"time":"2026-10-16T05:00:53Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"9418edcb-38f7-4d87-803b-f8aa7fcdf1d7","connIndex":0,"location":"ams06","ip":"198.41.200.113","protocol":"http2","time":"2026-10-16T05:01:04Z","message":"Registered tunnel connection"}
+{"level":"error","error":"Error shutting down control stream: context canceled","time":"2026-10-16T05:10:05Z","message":"failed to serve incoming request"}
+{"level":"info","event":0,"ip":"198.41.200.113","connIndex":0,"time":"2026-10-16T05:10:05Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"Error shutting down control stream: context canceled","connIndex":0,"time":"2026-10-16T05:10:07Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.113","connIndex":0,"time":"2026-10-16T05:10:17Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"41672646-0d0a-4a3d-9248-628139d2cbcf","connIndex":0,"location":"ams19","ip":"198.41.200.113","protocol":"http2","time":"2026-10-16T05:10:27Z","message":"Registered tunnel connection"}
+{"level":"info","connIndex":0,"time":"2026-10-16T05:13:41Z","message":"Lost connection with the edge"}
+{"level":"error","event":0,"ip":"198.41.200.113","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T05:13:41Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.200.113","connIndex":0,"time":"2026-10-16T05:13:41Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"Error shutting down control stream: client disconnected","time":"2026-10-16T05:13:41Z","message":"failed to serve incoming request"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T05:13:42Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.113","connIndex":0,"time":"2026-10-16T05:13:43Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"error","event":0,"ip":"198.41.200.113","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:41446->198.41.200.113:7844: i/o timeout","time":"2026-10-16T05:13:58Z","message":"Unable to establish connection with Cloudflare edge"}
+{"level":"error","event":0,"ip":"198.41.200.113","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:41446->198.41.200.113:7844: i/o timeout","time":"2026-10-16T05:13:58Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.200.113","connIndex":0,"time":"2026-10-16T05:13:58Z","message":"Retrying connection in up to 4s"}
+{"level":"error","error":"TLS handshake with edge error: read tcp 198.18.0.1:41446->198.41.200.113:7844: i/o timeout","connIndex":0,"time":"2026-10-16T05:14:02Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.192.27","connIndex":0,"time":"2026-10-16T05:14:21Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"error","event":0,"ip":"198.41.192.27","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:51578->198.41.192.27:7844: i/o timeout","time":"2026-10-16T05:14:36Z","message":"Unable to establish connection with Cloudflare edge"}
+{"level":"error","event":0,"ip":"198.41.192.27","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:51578->198.41.192.27:7844: i/o timeout","time":"2026-10-16T05:14:36Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.192.27","connIndex":0,"time":"2026-10-16T05:14:36Z","message":"Retrying connection in up to 8s"}
+{"level":"error","error":"TLS handshake with edge error: read tcp 198.18.0.1:51578->198.41.192.27:7844: i/o timeout","connIndex":0,"time":"2026-10-16T05:14:38Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.192.7","connIndex":0,"time":"2026-10-16T05:15:18Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"error","event":0,"ip":"198.41.192.7","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:39538->198.41.192.7:7844: i/o timeout","time":"2026-10-16T05:15:33Z","message":"Unable to establish connection with Cloudflare edge"}
+{"level":"error","event":0,"ip":"198.41.192.7","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:39538->198.41.192.7:7844: i/o timeout","time":"2026-10-16T05:15:33Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.192.7","connIndex":0,"time":"2026-10-16T05:15:33Z","message":"Retrying connection in up to 16s"}
+{"level":"error","error":"TLS handshake with edge error: read tcp 198.18.0.1:39538->198.41.192.7:7844: i/o timeout","connIndex":0,"time":"2026-10-16T05:15:37Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.53","connIndex":0,"time":"2026-10-16T05:16:13Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"8b94ba77-fb33-4c2e-a79f-f40419a63aae","connIndex":0,"location":"ams17","ip":"198.41.200.53","protocol":"http2","time":"2026-10-16T05:16:14Z","message":"Registered tunnel connection"}
+{"level":"error","error":"Error shutting down control stream: context canceled","time":"2026-10-16T05:28:38Z","message":"failed to serve incoming request"}
+{"level":"info","connIndex":0,"time":"2026-10-16T05:28:38Z","message":"Lost connection with the edge"}
+{"level":"error","event":0,"ip":"198.41.200.53","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T05:28:38Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.200.53","connIndex":0,"time":"2026-10-16T05:28:38Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T05:28:38Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.53","connIndex":0,"time":"2026-10-16T05:28:39Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"45fa0841-e718-47f2-8c5e-a3414a901412","connIndex":0,"location":"ams18","ip":"198.41.200.53","protocol":"http2","time":"2026-10-16T05:28:40Z","message":"Registered tunnel connection"}
+{"level":"info","connIndex":0,"time":"2026-10-16T06:03:18Z","message":"Lost connection with the edge"}
+{"level":"error","event":0,"ip":"198.41.200.53","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T06:03:18Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.200.53","connIndex":0,"time":"2026-10-16T06:03:18Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"Error shutting down control stream: context canceled","time":"2026-10-16T06:03:18Z","message":"failed to serve incoming request"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T06:03:19Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.53","connIndex":0,"time":"2026-10-16T06:03:23Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"c1e93640-5ac5-48eb-ad6b-0d13e4a1babf","connIndex":0,"location":"ams20","ip":"198.41.200.53","protocol":"http2","time":"2026-10-16T06:03:29Z","message":"Registered tunnel connection"}
+{"level":"info","connIndex":0,"time":"2026-10-16T09:00:19Z","message":"Lost connection with the edge"}
+{"level":"error","error":"Error shutting down control stream: context canceled","time":"2026-10-16T09:00:19Z","message":"failed to serve incoming request"}
+{"level":"warn","event":0,"ip":"198.41.200.53","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T09:00:19Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.200.53","connIndex":0,"time":"2026-10-16T09:00:19Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T09:00:21Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.53","connIndex":0,"time":"2026-10-16T09:00:31Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"error","event":0,"ip":"198.41.200.53","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:50886->198.41.200.53:7844: i/o timeout","time":"2026-10-16T09:00:46Z","message":"Unable to establish connection with Cloudflare edge"}
+{"level":"error","event":0,"ip":"198.41.200.53","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:50886->198.41.200.53:7844: i/o timeout","time":"2026-10-16T09:00:46Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.200.53","connIndex":0,"time":"2026-10-16T09:00:46Z","message":"Retrying connection in up to 4s"}
+{"level":"error","error":"TLS handshake with edge error: read tcp 198.18.0.1:50886->198.41.200.53:7844: i/o timeout","connIndex":0,"time":"2026-10-16T09:00:50Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.233","connIndex":0,"time":"2026-10-16T09:01:18Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"77f3821b-2fc5-4b35-88e3-2da7839dcd14","connIndex":0,"location":"ams01","ip":"198.41.200.233","protocol":"http2","time":"2026-10-16T09:01:28Z","message":"Registered tunnel connection"}
+{"level":"error","error":"Error shutting down control stream: client disconnected","time":"2026-10-16T11:00:17Z","message":"failed to serve incoming request"}
+{"level":"warn","event":0,"ip":"198.41.200.233","connIndex":0,"error":"Error shutting down control stream: client disconnected","time":"2026-10-16T11:00:17Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.200.233","connIndex":0,"time":"2026-10-16T11:00:17Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"Error shutting down control stream: client disconnected","connIndex":0,"time":"2026-10-16T11:00:17Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.233","connIndex":0,"time":"2026-10-16T11:00:30Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"error","event":0,"ip":"198.41.200.233","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:43504->198.41.200.233:7844: i/o timeout","time":"2026-10-16T11:00:45Z","message":"Unable to establish connection with Cloudflare edge"}
+{"level":"error","event":0,"ip":"198.41.200.233","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:43504->198.41.200.233:7844: i/o timeout","time":"2026-10-16T11:00:45Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.200.233","connIndex":0,"time":"2026-10-16T11:00:45Z","message":"Retrying connection in up to 4s"}
+{"level":"error","error":"TLS handshake with edge error: read tcp 198.18.0.1:43504->198.41.200.233:7844: i/o timeout","connIndex":0,"time":"2026-10-16T11:00:46Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.192.67","connIndex":0,"time":"2026-10-16T11:01:00Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"error","event":0,"ip":"198.41.192.67","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:38016->198.41.192.67:7844: i/o timeout","time":"2026-10-16T11:01:15Z","message":"Unable to establish connection with Cloudflare edge"}
+{"level":"error","event":0,"ip":"198.41.192.67","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:38016->198.41.192.67:7844: i/o timeout","time":"2026-10-16T11:01:15Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.192.67","connIndex":0,"time":"2026-10-16T11:01:15Z","message":"Retrying connection in up to 8s"}
+{"level":"error","error":"TLS handshake with edge error: read tcp 198.18.0.1:38016->198.41.192.67:7844: i/o timeout","connIndex":0,"time":"2026-10-16T11:01:23Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.192.7","connIndex":0,"time":"2026-10-16T11:02:03Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"fe91d77b-4cbc-412e-b5fd-141c10160043","connIndex":0,"location":"ams08","ip":"198.41.192.7","protocol":"http2","time":"2026-10-16T11:02:05Z","message":"Registered tunnel connection"}
+{"level":"error","error":"Error shutting down control stream: client disconnected","time":"2026-10-16T12:00:16Z","message":"failed to serve incoming request"}
+{"level":"error","event":0,"ip":"198.41.192.7","connIndex":0,"error":"Error shutting down control stream: client disconnected","time":"2026-10-16T12:00:16Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.192.7","connIndex":0,"time":"2026-10-16T12:00:16Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"Error shutting down control stream: client disconnected","connIndex":0,"time":"2026-10-16T12:00:17Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.192.7","connIndex":0,"time":"2026-10-16T12:00:31Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"error","event":0,"ip":"198.41.192.7","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:34516->198.41.192.7:7844: i/o timeout","time":"2026-10-16T12:00:46Z","message":"Unable to establish connection with Cloudflare edge"}
+{"level":"error","event":0,"ip":"198.41.192.7","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:34516->198.41.192.7:7844: i/o timeout","time":"2026-10-16T12:00:46Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.192.7","connIndex":0,"time":"2026-10-16T12:00:46Z","message":"Retrying connection in up to 4s"}
+{"level":"error","error":"TLS handshake with edge error: read tcp 198.18.0.1:34516->198.41.192.7:7844: i/o timeout","connIndex":0,"time":"2026-10-16T12:00:49Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.233","connIndex":0,"time":"2026-10-16T12:00:51Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"error","event":0,"ip":"198.41.200.233","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:44812->198.41.200.233:7844: i/o timeout","time":"2026-10-16T12:01:06Z","message":"Unable to establish connection with Cloudflare edge"}
+{"level":"error","event":0,"ip":"198.41.200.233","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:44812->198.41.200.233:7844: i/o timeout","time":"2026-10-16T12:01:06Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.200.233","connIndex":0,"time":"2026-10-16T12:01:06Z","message":"Retrying connection in up to 8s"}
+{"level":"error","error":"TLS handshake with edge error: read tcp 198.18.0.1:44812->198.41.200.233:7844: i/o timeout","connIndex":0,"time":"2026-10-16T12:01:08Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.53","connIndex":0,"time":"2026-10-16T12:01:52Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"bec858b2-1369-445a-8f36-c944037feeb5","connIndex":0,"location":"ams06","ip":"198.41.200.53","protocol":"http2","time":"2026-10-16T12:02:01Z","message":"Registered tunnel connection"}
+{"level":"info","connIndex":0,"time":"2026-10-16T13:00:14Z","message":"Lost connection with the edge"}
+{"level":"warn","event":0,"ip":"198.41.200.53","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T13:00:14Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.200.53","connIndex":0,"time":"2026-10-16T13:00:14Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"Error shutting down control stream: client disconnected","time":"2026-10-16T13:00:14Z","message":"failed to serve incoming request"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T13:00:16Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.53","connIndex":0,"time":"2026-10-16T13:00:32Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"74d0de5a-65d6-43aa-8cb6-58454837bd16","connIndex":0,"location":"ams18","ip":"198.41.200.53","protocol":"http2","time":"2026-10-16T13:00:37Z","message":"Registered tunnel connection"}
+{"level":"info","connIndex":0,"time":"2026-10-16T14:00:14Z","message":"Lost connection with the edge"}
+{"level":"error","event":0,"ip":"198.41.200.53","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T14:00:14Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.200.53","connIndex":0,"time":"2026-10-16T14:00:14Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"Error shutting down control stream: client disconnected","time":"2026-10-16T14:00:14Z","message":"failed to serve incoming request"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T14:00:16Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.53","connIndex":0,"time":"2026-10-16T14:00:35Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"error","event":0,"ip":"198.41.200.53","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:60764->198.41.200.53:7844: i/o timeout","time":"2026-10-16T14:00:50Z","message":"Unable to establish connection with Cloudflare edge"}
+{"level":"error","event":0,"ip":"198.41.200.53","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:60764->198.41.200.53:7844: i/o timeout","time":"2026-10-16T14:00:50Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.200.53","connIndex":0,"time":"2026-10-16T14:00:50Z","message":"Retrying connection in up to 4s"}
+{"level":"error","error":"TLS handshake with edge error: read tcp 198.18.0.1:60764->198.41.200.53:7844: i/o timeout","connIndex":0,"time":"2026-10-16T14:00:51Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.233","connIndex":0,"time":"2026-10-16T14:01:23Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"ba1b389b-c171-4315-b4b4-0fbe1398be66","connIndex":0,"location":"ams20","ip":"198.41.200.233","protocol":"http2","time":"2026-10-16T14:01:26Z","message":"Registered tunnel connection"}
+{"level":"error","error":"Error shutting down control stream: context canceled","time":"2026-10-16T14:11:04Z","message":"failed to serve incoming request"}
+{"level":"info","event":0,"ip":"198.41.200.233","connIndex":0,"time":"2026-10-16T14:11:04Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"Error shutting down control stream: context canceled","connIndex":0,"time":"2026-10-16T14:11:05Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.233","connIndex":0,"time":"2026-10-16T14:11:11Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"68cd0467-ed3d-41d0-bb7c-072eac1aca2a","connIndex":0,"location":"ams19","ip":"198.41.200.233","protocol":"http2","time":"2026-10-16T14:11:13Z","message":"Registered tunnel connection"}
+{"level":"info","connIndex":0,"time":"2026-10-16T14:35:19Z","message":"Lost connection with the edge"}
+{"level":"error","event":0,"ip":"198.41.200.233","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T14:35:19Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.200.233","connIndex":0,"time":"2026-10-16T14:35:19Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"Error shutting down control stream: client disconnected","time":"2026-10-16T14:35:19Z","message":"failed to serve incoming request"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T14:35:20Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.233","connIndex":0,"time":"2026-10-16T14:35:34Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"50e5b5d1-08cf-4e5e-9778-1fd6fe94e487","connIndex":0,"location":"ams01","ip":"198.41.200.233","protocol":"http2","time":"2026-10-16T14:35:37Z","message":"Registered tunnel connection"}
+{"level":"info","connIndex":0,"time":"2026-10-16T15:00:11Z","message":"Lost connection with the edge"}
+{"level":"warn","event":0,"ip":"198.41.200.233","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T15:00:11Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.200.233","connIndex":0,"time":"2026-10-16T15:00:11Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"Error shutting down control stream: client disconnected","time":"2026-10-16T15:00:11Z","message":"failed to serve incoming request"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T15:00:12Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.233","connIndex":0,"time":"2026-10-16T15:00:29Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"cd50c2c1-87ea-4452-a9dc-dcb2a7eeee17","connIndex":0,"location":"ams01","ip":"198.41.200.233","protocol":"http2","time":"2026-10-16T15:00:32Z","message":"Registered tunnel connection"}
+{"level":"info","connIndex":0,"time":"2026-10-16T16:09:39Z","message":"Lost connection with the edge"}
+{"level":"error","error":"Error shutting down control stream: client disconnected","time":"2026-10-16T16:09:39Z","message":"failed to serve incoming request"}
+{"level":"error","event":0,"ip":"198.41.200.233","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T16:09:39Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.200.233","connIndex":0,"time":"2026-10-16T16:09:39Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T16:09:40Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.233","connIndex":0,"time":"2026-10-16T16:09:44Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"7fcf423d-3bcf-4166-bea2-40f1a5d56bf2","connIndex":0,"location":"ams01","ip":"198.41.200.233","protocol":"http2","time":"2026-10-16T16:09:49Z","message":"Registered tunnel connection"}
+{"level":"info","connIndex":0,"time":"2026-10-16T16:15:22Z","message":"Lost connection with the edge"}
+{"level":"error","error":"Error shutting down control stream: context canceled","time":"2026-10-16T16:15:22Z","message":"failed to serve incoming request"}
+{"level":"error","event":0,"ip":"198.41.200.233","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T16:15:22Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.200.233","connIndex":0,"time":"2026-10-16T16:15:22Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T16:15:22Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.200.233","connIndex":0,"time":"2026-10-16T16:15:38Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"error","event":0,"ip":"198.41.200.233","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:52048->198.41.200.233:7844: i/o timeout","time":"2026-10-16T16:15:53Z","message":"Unable to establish connection with Cloudflare edge"}
+{"level":"error","event":0,"ip":"198.41.200.233","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:52048->198.41.200.233:7844: i/o timeout","time":"2026-10-16T16:15:53Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.200.233","connIndex":0,"time":"2026-10-16T16:15:53Z","message":"Retrying connection in up to 4s"}
+{"level":"error","error":"TLS handshake with edge error: read tcp 198.18.0.1:52048->198.41.200.233:7844: i/o timeout","connIndex":0,"time":"2026-10-16T16:15:54Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.192.227","connIndex":0,"time":"2026-10-16T16:16:18Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"2d6d7951-9012-40af-8d15-a73abef1ff9d","connIndex":0,"location":"ams07","ip":"198.41.192.227","protocol":"http2","time":"2026-10-16T16:16:30Z","message":"Registered tunnel connection"}
+{"level":"info","connIndex":0,"time":"2026-10-16T16:20:07Z","message":"Lost connection with the edge"}
+{"level":"error","error":"Error shutting down control stream: context canceled","time":"2026-10-16T16:20:07Z","message":"failed to serve incoming request"}
+{"level":"error","event":0,"ip":"198.41.192.227","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T16:20:07Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.192.227","connIndex":0,"time":"2026-10-16T16:20:07Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T16:20:07Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.192.227","connIndex":0,"time":"2026-10-16T16:20:24Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"b0b92404-d39e-4e66-a26b-7e7260237de8","connIndex":0,"location":"ams08","ip":"198.41.192.227","protocol":"http2","time":"2026-10-16T16:20:27Z","message":"Registered tunnel connection"}
+{"level":"warn","time":"2026-10-16T17:39:58Z","message":"Your version 2026.9.3 is outdated. We recommend upgrading it to 2026.10.1"}
+{"level":"info","connIndex":0,"time":"2026-10-16T19:00:18Z","message":"Lost connection with the edge"}
+{"level":"warn","event":0,"ip":"198.41.192.227","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T19:00:18Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.192.227","connIndex":0,"time":"2026-10-16T19:00:18Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"Error shutting down control stream: client disconnected","time":"2026-10-16T19:00:18Z","message":"failed to serve incoming request"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T19:00:19Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.192.227","connIndex":0,"time":"2026-10-16T19:00:25Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"75ca8cd4-fe63-4fee-b0d7-30f24ed95471","connIndex":0,"location":"ams22","ip":"198.41.192.227","protocol":"http2","time":"2026-10-16T19:00:39Z","message":"Registered tunnel connection"}
+{"level":"info","connIndex":0,"time":"2026-10-16T19:54:00Z","message":"Lost connection with the edge"}
+{"level":"error","error":"Error shutting down control stream: client disconnected","time":"2026-10-16T19:54:00Z","message":"failed to serve incoming request"}
+{"level":"error","event":0,"ip":"198.41.192.227","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T19:54:00Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.192.227","connIndex":0,"time":"2026-10-16T19:54:00Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T19:54:00Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.192.227","connIndex":0,"time":"2026-10-16T19:54:15Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"error","event":0,"ip":"198.41.192.227","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:38384->198.41.192.227:7844: i/o timeout","time":"2026-10-16T19:54:30Z","message":"Unable to establish connection with Cloudflare edge"}
+{"level":"error","event":0,"ip":"198.41.192.227","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:38384->198.41.192.227:7844: i/o timeout","time":"2026-10-16T19:54:30Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.192.227","connIndex":0,"time":"2026-10-16T19:54:30Z","message":"Retrying connection in up to 4s"}
+{"level":"error","error":"TLS handshake with edge error: read tcp 198.18.0.1:38384->198.41.192.227:7844: i/o timeout","connIndex":0,"time":"2026-10-16T19:54:34Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.192.37","connIndex":0,"time":"2026-10-16T19:55:02Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"6e760279-5dfd-4c08-943d-8c41a2a47d71","connIndex":0,"location":"ams07","ip":"198.41.192.37","protocol":"http2","time":"2026-10-16T19:55:07Z","message":"Registered tunnel connection"}
+{"level":"info","connIndex":0,"time":"2026-10-16T20:00:12Z","message":"Lost connection with the edge"}
+{"level":"error","event":0,"ip":"198.41.192.37","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T20:00:12Z","message":"Serve tunnel error"}
+{"level":"error","error":"Error shutting down control stream: client disconnected","time":"2026-10-16T20:00:12Z","message":"failed to serve incoming request"}
+{"level":"info","event":0,"ip":"198.41.192.37","connIndex":0,"time":"2026-10-16T20:00:12Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T20:00:12Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.192.37","connIndex":0,"time":"2026-10-16T20:00:25Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"58d963a2-b9c7-473c-8f10-9097fbece1be","connIndex":0,"location":"ams22","ip":"198.41.192.37","protocol":"http2","time":"2026-10-16T20:00:39Z","message":"Registered tunnel connection"}
+{"level":"info","connIndex":0,"time":"2026-10-16T20:04:15Z","message":"Lost connection with the edge"}
+{"level":"error","error":"Error shutting down control stream: client disconnected","time":"2026-10-16T20:04:15Z","message":"failed to serve incoming request"}
+{"level":"error","event":0,"ip":"198.41.192.37","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T20:04:15Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.192.37","connIndex":0,"time":"2026-10-16T20:04:15Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T20:04:17Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.192.37","connIndex":0,"time":"2026-10-16T20:04:30Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"a2225e95-89d6-45bd-8445-5497a742518f","connIndex":0,"location":"ams08","ip":"198.41.192.37","protocol":"http2","time":"2026-10-16T20:04:34Z","message":"Registered tunnel connection"}
+{"level":"info","connIndex":0,"time":"2026-10-16T20:30:16Z","message":"Lost connection with the edge"}
+{"level":"error","event":0,"ip":"198.41.192.37","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T20:30:16Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.192.37","connIndex":0,"time":"2026-10-16T20:30:16Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"Error shutting down control stream: context canceled","time":"2026-10-16T20:30:16Z","message":"failed to serve incoming request"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T20:30:16Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.192.37","connIndex":0,"time":"2026-10-16T20:30:23Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"710584e2-2a52-4e3e-b00d-b2fd5fe505cb","connIndex":0,"location":"ams15","ip":"198.41.192.37","protocol":"http2","time":"2026-10-16T20:30:31Z","message":"Registered tunnel connection"}
+{"level":"info","connIndex":0,"time":"2026-10-16T21:00:16Z","message":"Lost connection with the edge"}
+{"level":"error","error":"Error shutting down control stream: context canceled","time":"2026-10-16T21:00:16Z","message":"failed to serve incoming request"}
+{"level":"warn","event":0,"ip":"198.41.192.37","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T21:00:16Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.192.37","connIndex":0,"time":"2026-10-16T21:00:16Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T21:00:17Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.192.37","connIndex":0,"time":"2026-10-16T21:00:33Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"error","event":0,"ip":"198.41.192.37","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:51600->198.41.192.37:7844: i/o timeout","time":"2026-10-16T21:00:48Z","message":"Unable to establish connection with Cloudflare edge"}
+{"level":"error","event":0,"ip":"198.41.192.37","connIndex":0,"error":"TLS handshake with edge error: read tcp 198.18.0.1:51600->198.41.192.37:7844: i/o timeout","time":"2026-10-16T21:00:48Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.192.37","connIndex":0,"time":"2026-10-16T21:00:48Z","message":"Retrying connection in up to 4s"}
+{"level":"error","error":"TLS handshake with edge error: read tcp 198.18.0.1:51600->198.41.192.37:7844: i/o timeout","connIndex":0,"time":"2026-10-16T21:00:48Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.192.167","connIndex":0,"time":"2026-10-16T21:01:16Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"a442bf28-2f28-45ac-bcf9-30071add5fdc","connIndex":0,"location":"ams22","ip":"198.41.192.167","protocol":"http2","time":"2026-10-16T21:01:18Z","message":"Registered tunnel connection"}
+{"level":"info","connIndex":0,"time":"2026-10-16T21:27:13Z","message":"Lost connection with the edge"}
+{"level":"error","event":0,"ip":"198.41.192.167","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T21:27:13Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.192.167","connIndex":0,"time":"2026-10-16T21:27:13Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"Error shutting down control stream: context canceled","time":"2026-10-16T21:27:13Z","message":"failed to serve incoming request"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T21:27:14Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.192.167","connIndex":0,"time":"2026-10-16T21:27:14Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"ec60c46c-8d02-4941-ab88-0c0315561881","connIndex":0,"location":"ams15","ip":"198.41.192.167","protocol":"http2","time":"2026-10-16T21:27:16Z","message":"Registered tunnel connection"}
+{"level":"info","connIndex":0,"time":"2026-10-16T21:44:04Z","message":"Lost connection with the edge"}
+{"level":"error","error":"Error shutting down control stream: client disconnected","time":"2026-10-16T21:44:04Z","message":"failed to serve incoming request"}
+{"level":"error","event":0,"ip":"198.41.192.167","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T21:44:04Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.192.167","connIndex":0,"time":"2026-10-16T21:44:04Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T21:44:06Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.192.167","connIndex":0,"time":"2026-10-16T21:44:14Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"45797f17-9a14-42e6-96de-791aa630fea5","connIndex":0,"location":"ams08","ip":"198.41.192.167","protocol":"http2","time":"2026-10-16T21:44:17Z","message":"Registered tunnel connection"}
+{"level":"error","error":"Error shutting down control stream: context canceled","time":"2026-10-16T21:56:20Z","message":"failed to serve incoming request"}
+{"level":"info","event":0,"ip":"198.41.192.167","connIndex":0,"time":"2026-10-16T21:56:20Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"Error shutting down control stream: context canceled","connIndex":0,"time":"2026-10-16T21:56:22Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.192.167","connIndex":0,"time":"2026-10-16T21:56:26Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"bd973a9b-3669-4a8e-a5c5-9a350d5f2b01","connIndex":0,"location":"ams21","ip":"198.41.192.167","protocol":"http2","time":"2026-10-16T21:56:28Z","message":"Registered tunnel connection"}
+{"level":"info","connIndex":0,"time":"2026-10-16T22:04:33Z","message":"Lost connection with the edge"}
+{"level":"warn","event":0,"ip":"198.41.192.167","connIndex":0,"error":"connection with edge closed","time":"2026-10-16T22:04:33Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.192.167","connIndex":0,"time":"2026-10-16T22:04:33Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"Error shutting down control stream: client disconnected","time":"2026-10-16T22:04:33Z","message":"failed to serve incoming request"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-16T22:04:35Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.192.167","connIndex":0,"time":"2026-10-16T22:04:38Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"6265660a-3e4d-456a-a086-7a4d6561258b","connIndex":0,"location":"ams15","ip":"198.41.192.167","protocol":"http2","time":"2026-10-16T22:04:42Z","message":"Registered tunnel connection"}
+{"level":"info","connIndex":0,"time":"2026-10-17T00:00:13Z","message":"Lost connection with the edge"}
+{"level":"error","error":"Error shutting down control stream: client disconnected","time":"2026-10-17T00:00:13Z","message":"failed to serve incoming request"}
+{"level":"error","event":0,"ip":"198.41.192.167","connIndex":0,"error":"connection with edge closed","time":"2026-10-17T00:00:13Z","message":"Serve tunnel error"}
+{"level":"info","event":0,"ip":"198.41.192.167","connIndex":0,"time":"2026-10-17T00:00:13Z","message":"Retrying connection in up to 2s"}
+{"level":"error","error":"connection with edge closed","connIndex":0,"time":"2026-10-17T00:00:15Z","message":"Connection terminated"}
+{"level":"info","event":0,"ip":"198.41.192.167","connIndex":0,"time":"2026-10-17T00:00:29Z","message":"Tunnel connection curve preferences: [X25519MLKEM768 CurveID(65074) CurveP256]"}
+{"level":"info","event":0,"connection":"bca4085a-e013-45c9-b619-8e6d526eb696","connIndex":0,"location":"ams08","ip":"198.41.192.167","protocol":"http2","time":"2026-10-17T00:00:32Z","message":"Registered tunnel connection"}
