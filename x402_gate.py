@@ -442,10 +442,39 @@ class X402Gate:
             self._commit(nonce)
             raise ValueError(f"settled on {settled_network}, required {config.network}")
 
+        # ─── Расчёт ───────────────────────────────────────────────────
+        # /verify отвечает на вопрос «подпись верна?» и денег не двигает.
+        # Переводит их /settle. Без этого шага гейт пропускал работу, а
+        # оплата оставалась разрешением, которое никто не отправил в цепь:
+        # клиент получал услугу, баланс не менялся. Проверено на attest
+        # 17.10.2026 — там это стоило 0.015 USDC несобранной оплаты.
+        try:
+            settled_result = _post_facilitator(config.facilitator_url, "/settle", {
+                "x402Version": config.version,
+                "paymentPayload": presented,
+                "paymentRequirements": expected,
+            })
+        except (urllib.error.URLError, OSError, ValueError) as exc:
+            # Nonce не сжигаем: неизвестно, ушла ли транзакция.
+            self._release(nonce)
+            raise FacilitatorUnreachable(str(exc)) from exc
+
+        if not settled_result.get("success"):
+            self._commit(nonce)
+            raise ValueError(
+                "facilitator did not settle the payment: "
+                f"{settled_result.get('errorReason') or settled_result.get('errorMessage') or 'no reason given'}"
+            )
+        tx_hash = str(settled_result.get("transaction") or "")
+        if not tx_hash:
+            # «Оплачено» без транзакции — это бесплатная услуга.
+            self._commit(nonce)
+            raise ValueError("facilitator reported success without a transaction")
+
         self._commit(nonce)
         return Settlement(
-            transaction_ref=str(details.get("transaction", result.get("transaction", ""))),
-            payer=payer,
+            transaction_ref=tx_hash,
+            payer=str(settled_result.get("payer") or payer),
             amount=from_atoms(int(settled_atoms)),
             network=config.network,
             nonce=nonce,

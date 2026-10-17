@@ -156,6 +156,18 @@ class FakeFacilitator:
 
     def __call__(self, url, path, payload):
         self.calls.append({"url": url, "path": path, "payload": payload})
+        # /settle — это то, что двигает деньги. Заглушка обязана отвечать
+        # по-разному на разные пути: иначе она не отличит проверку от
+        # расчёта и не поймает их отсутствие. Настоящий фасилитатор отвечает
+        # на /verify полем isValid, а на /settle — полем success.
+        if path.endswith("/settle"):
+            return {
+                "success": self.is_valid,
+                "errorReason": "scripted failure" if not self.is_valid else None,
+                "transaction": self.transaction if self.is_valid else None,
+                "payer": self.payer,
+                "network": self.network,
+            }
         return {
             "isValid": self.is_valid,
             "invalidReason": "scripted failure" if not self.is_valid else None,
@@ -188,9 +200,11 @@ class TestGateHappyPath(unittest.TestCase):
         self.assertEqual(s.transaction_ref, "0xdead")
 
     def test_facilitator_was_actually_called(self):
+        """Оба шага: проверка И расчёт. Без второго деньги не двигаются."""
         self._pay()
-        self.assertEqual(len(self.fac.calls), 1)
-        self.assertEqual(self.fac.calls[0]["path"], "/verify")
+        paths = [c["path"] for c in self.fac.calls]
+        self.assertEqual(paths, ["/verify", "/settle"],
+                         "обращение к /settle пропущено — оплата не состоится")
 
     def test_requirement_sent_matches_what_was_issued(self):
         """Имя поля исправлено 09.10.2026: было `requirements`.
@@ -557,6 +571,12 @@ class TestFacilitatorPayloadShape(unittest.TestCase):
 
         def spy(url, path, payload):
             seen.update(payload)
+            # /settle отвечает иначе, чем /verify: success и transaction
+            # вместо isValid. Заглушка, отвечающая одинаково, не отличит
+            # проверку от расчёта.
+            if path.endswith("/settle"):
+                return {"success": True, "transaction": "0xdead",
+                        "payer": self.PAY}
             return {"isValid": True, "payer": self.PAY,
                     "amount": str(gate.config.price_atoms)}
 
@@ -692,6 +712,9 @@ class TestV2EndToEnd(unittest.TestCase):
 
         def spy(url, path, payload):
             seen.update(payload)
+            if path.endswith("/settle"):
+                return {"success": True, "transaction": "0xdead",
+                        "payer": self.PAY}
             return {"isValid": True, "payer": self.PAY,
                     "amount": accepts["amount"]}
 
@@ -729,8 +752,12 @@ class TestV2EndToEnd(unittest.TestCase):
         }
         import x402_gate as mod
         real = mod._post_facilitator
-        mod._post_facilitator = lambda *a, **k: {
-            "isValid": True, "payer": self.PAY, "amount": accepts["amount"]}
+        def _fake(url, path, payload, **k):
+            if path.endswith("/settle"):
+                return {"success": True, "transaction": "0xdead", "payer": self.PAY}
+            return {"isValid": True, "payer": self.PAY, "amount": accepts["amount"]}
+
+        mod._post_facilitator = _fake
         try:
             gate.verify(b64url(presented), "drift:/mcp")
             with self.assertRaises(ValueError):
