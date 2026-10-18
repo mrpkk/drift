@@ -210,8 +210,8 @@ def post_devto(env: dict[str, str], dry: bool) -> dict:
             "accepted. Full analysis with a reproducer is on the project site.")
     if dry:
         return {"status": "DRY", "title": title, "chars": len(body)}
-    data = json.dumps({"title": title, "published": True, "body_markdown": body,
-                       "tags": ["ai", "agents", "security", "mcp", "opensource"]}).encode()
+    data = json.dumps({"article": {"title": title, "published": True,
+                          "body_markdown": body, "tags": ["ai", "agents", "security", "mcp"]}}).encode()
     req = urllib.request.Request(
         "https://dev.to/api/articles", data=data,
         headers={"User-Agent": BROWSER_UA, "Content-Type": "application/json",
