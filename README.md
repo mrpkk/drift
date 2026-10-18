@@ -1,5 +1,7 @@
 # drift
 
+[![M8ven Score](https://m8ven.ai/badge/mcp/mrpkk/drift?variant=verified)](https://m8ven.ai/mcp/mrpkk/drift?s=readme)
+
 **Continuous mandate enforcement for AI agents.** Every action is checked against the
 signed mandate *before* it happens, not once at signing.
 
