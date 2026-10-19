@@ -261,7 +261,7 @@
 | Bazaar PayAI | ✓ декларация в 402 (коммит `0f0690c`), ждёт первого расчёта |
 | Метрики воронки | декларация каталога ✓; наши метрики — при первом платном вызове |
 | m8ven Trust Index | ✓ 18.10 — Verified Publisher: строка-владение в README + письмо-подтверждение (badge «M8ven Verified» рендерится) |
-| Agensi (skill-маркетплейс) | ✓ 19.10 — листинг **drift - Mandate Guard for AI Agents, $19 one-time** отправлен на ревью («Skill submitted! … pending review», «usually within a day»); payout — Zoneless/USDC на Solana (подключён владельцем); пакет и тексты: `work/sales/agensi/` |
+| Agensi (skill-маркетплейс) | ✅ **20.10 — листинг LIVE**: [drift - Mandate Guard for AI Agents](https://www.agensi.io/skills/drift-mandate-guard-for-ai-agents), $19 one-time (ревью прошло за ~1 день; payout — Zoneless/USDC на Solana). Пакет и тексты: `work/sales/agensi/` |
 | Статьи | не написаны |
 
 Блокер первой продажи: первый расчёт покупателя (listing подтягивается сам).
