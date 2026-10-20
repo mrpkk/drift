@@ -89,6 +89,20 @@ print(verdict, rule)   # DENY amount
 If an agent controls both `intent` and `amount`, it can lie in both. Closing that gap is
 `attest`'s job: attest proves afterwards, drift bounds beforehand. They are complements.
 
+## Use it from your agent
+
+```json
+{
+  "mcpServers": {
+    "drift": { "url": "https://drift.rta.lat/mcp" }
+  }
+}
+```
+
+That block is how our own agents call this server. Tools: `drift_check` (one
+action), `drift_session` (a sequence), `drift_explain` (the six rules and why
+each exists). 100 free checks per day, then $0.005 per call over x402.
+
 ## Licence
 
 Apache-2.0.
