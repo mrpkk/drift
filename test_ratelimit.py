@@ -184,12 +184,28 @@ class TestFreeTierWiring(unittest.TestCase):
         post = src.split("def do_POST")[1].split("def do_GET")[0]
         self.assertLess(post.index("HEALTH_PATH"), post.index("LIMITER.check"))
 
-    def test_quota_is_checked_before_parsing_the_body(self):
-        """An exhausted caller must not make the server read or parse anything."""
+    def test_quota_is_charged_only_for_paid_methods(self):
+        """Квота тратится на tools/call; рукопожатие и перечисление — нет.
+
+        Порядок «тело, потом квота» выбран осознанно (коммит a12214d):
+        метод известен только из тела, а каталог (Glama) не должен
+        получать 402 за бесплатный initialize — из-за этого сервер однажды
+        опустился ниже живых в выдаче. Защита от пустого чтения тела
+        обеспечивается не порядком, а лимитом размера тела.
+        """
         import http_server
         src = pathlib.Path(http_server.__file__).read_text()
         post = src.split("def do_POST")[1].split("def do_GET")[0]
-        self.assertLess(post.index("LIMITER.check"), post.index("self.rfile.read"))
+        self.assertLess(post.index("_is_free_method"), post.index("LIMITER.check"))
+
+    def test_body_size_is_capped(self):
+        """Тело читается до проверки квоты — значит его размер ограничен."""
+        import http_server
+        self.assertLessEqual(http_server.MAX_BODY_BYTES, 1024 * 1024)
+        src = pathlib.Path(http_server.__file__).read_text()
+        post = src.split("def do_POST")[1].split("def do_GET")[0]
+        self.assertIn("MAX_BODY_BYTES", post)
+        self.assertIn("413", post)
 
 
 if __name__ == "__main__":

@@ -35,6 +35,7 @@ X402_STATE_DIR_ENV = "DRIFT_STATE_DIR"
 X402_VERSION_ENV = "DRIFT_X402_VERSION"
 X402_RESOURCE_ENV = "DRIFT_X402_RESOURCE"
 DEFAULT_HOST = "127.0.0.1"  # сетевой доступ — только через явный --host
+MAX_BODY_BYTES = 512 * 1024  # тело читается до проверки квоты — размер ограничен
 
 
 # Методы MCP, не тратящие квоту: обнаружение, а не работа.
@@ -215,7 +216,13 @@ class Handler(BaseHTTPRequestHandler):
         # опустила нас ниже здоровых серверов в выдаче.
         #
         # Платной остаётся работа: tools/call. Обнаружение бесплатно.
+        # Тело читаем до проверки квоты — нужно знать метод (см. комментарий
+        # выше). Размер тела при этом ограничен: иначе исчерпанный клиент
+        # заставил бы сервер принять мегабайты впустую.
         n = int(self.headers.get("Content-Length") or 0)
+        if n > MAX_BODY_BYTES:
+            self._send(413, b'{"error":"payload too large"}')
+            return
         raw = self.rfile.read(n)
         if _is_free_method(raw):
             out = respond(raw)
