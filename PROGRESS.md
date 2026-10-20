@@ -257,6 +257,7 @@
 | Пункт плана | Статус |
 |---|---|
 | Реестры MCP (Glama / Smithery / registry) | ✓ (io.github.mrpkk/drift, maxim-pkk/drift) |
+| **mcpservers.org** | ✅ **20.10 — одобрено, страница LIVE**: https://mcpservers.org/servers/mrpkk/drift (бейдж в README, `73b62e7`) |
 | mcp.so | ✓ 18.10 — заявка через «submit a ticket» (fetch POST /api/tickets прошёл; визуального подтверждения нет, трекинг по почте — как attest 17.10) |
 | Bazaar PayAI | ✓ декларация в 402 (коммит `0f0690c`), ждёт первого расчёта |
 | Метрики воронки | декларация каталога ✓; наши метрики — при первом платном вызове |
