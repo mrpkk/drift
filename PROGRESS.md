@@ -140,6 +140,7 @@
 
 - [x] S6.1 Статья 1 — «Your agent's spending mandate is not being audience-checked» → `/ap2-expected-aud-not-enforced/`, HTTP 200  @4c85904
 - [x] S6.2 Статья 2 — «Six ways an agent exceeds its mandate» → `/six-ways-an-agent-drifts/`, HTTP 200  @4c85904
+- [x] S6.3 **Статья 3 (20.10)** — «The order of the checks is the product: enforcing an AI agent's spending mandate» → https://dev.to/mrpkk/the-order-of-the-checks-is-the-product-enforcing-an-ai-agents-spending-mandate-4adp (текст: `articles/03-order-of-checks.md`; реальный вывод `drift_session` с fingerprint `596079e81359655b`; ссылка на живой листинг Agensi)
 - [x] S6.3 SEO: Jekyll + jekyll-seo-tag + sitemap.xml → HTTP 200, `title` и `description` из мета-описания  @4c85904
 - [x] S6.4a **Публикация в Telegram и VK.** `@pravritti_agents` — единственный канал, подходящий по тематике (в описании «AI-агенты в продакшене, MCP-протоколы»). TG message_id 494; VK `wall239991204_231`. Обложка 1200×675 сгенерирована (`assets/vk-cover.png`)  @-
 - [x] S6.5 Анонс с PoC как доказательством — тексты на русском и английском готовы, переведены в VK без markdown  @-
