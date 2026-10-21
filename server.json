@@ -1,14 +1,13 @@
 {
-  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.schema.json",
-  "name": "io.github.mrpkk/drift",
-  "description": "Непрерывный контроль мандата агента: каждое действие сверяется с подписанным полномочием ДО того, как совершится. Проверяются получатель, аудитория, лимит суммы, валюта, срок и намерение. Отказ по умолчанию, отпечаток цепочки решений. Заполняет разрыв: AP2 проверяет мандат один раз в момент подписи.",
-  "status": "active",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "lat.rta/drift",
+  "title": "drift — mandate enforcement for AI agents",
+  "description": "Check every proposed agent action against a signed mandate before it happens.",
   "repository": {
     "url": "https://github.com/mrpkk/drift",
     "source": "github"
   },
   "version": "0.1.0",
-  "packages": [],
   "remotes": [
     {
       "type": "streamable-http",
