@@ -1,0 +1,10 @@
+{
+  "name": "drift",
+  "version": "0.1.0",
+  "description": "Continuous mandate enforcement for AI agents: every proposed action is checked against a signed mandate before it happens.",
+  "mcpServers": {
+    "drift": {
+      "httpUrl": "https://drift.rta.lat/mcp"
+    }
+  }
+}

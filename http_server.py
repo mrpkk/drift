@@ -178,6 +178,41 @@ def _sitemap() -> str:
             '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
             f"{urls}</urlset>")
 
+_PRIVACY_HTML = """<!doctype html><html lang="en"><head><meta charset=utf-8>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>drift — privacy</title>
+<meta name="description" content="What drift stores and what it does not.">
+<style>
+ body{background:#0b0d12;color:#e8ecf4;font:16px/1.65 system-ui,sans-serif;max-width:700px;margin:0 auto;padding:44px 22px 80px}
+ h1{font-size:26px;margin:0 0 16px} h2{font-size:18px;margin:26px 0 8px}
+ p,li{color:#c3cad4} code{background:#171b21;padding:2px 6px;border-radius:4px}
+</style></head><body>
+<h1>Privacy</h1>
+<p>drift checks proposed actions against a signed mandate before they happen.</p>
+<h2>What we store</h2>
+<ul>
+<li><strong>Call counters</strong> — how many requests a caller made, per day, so the
+free tier can be enforced. No artifacts, no prompts, no results.</li>
+<li><strong>Nonces</strong> — one-time tokens that stop the same request from being
+replayed. They expire and are not linked to a person.</li>
+</ul>
+<h2>What we do not store</h2>
+<ul>
+<li>the artifacts or proofs you check, and the verdicts;</li>
+<li>your prompts, model outputs, or anything you paste into the demo;</li>
+<li>your IP address — the server sees the tunnel's address, not yours.</li>
+</ul>
+<h2>Payments</h2>
+<p>Payments settle on-chain via x402 (USDC on Base). The receipt is signed and
+verifiable offline. The paying wallet is visible on the public blockchain, as
+any blockchain payment is — that is a property of the network, not of this
+service.</p>
+<h2>Deletion</h2>
+<p>Write to the address in the footer of any page and we will delete what you
+name. Counter aggregates can be reset on request.</p>
+</body></html>"""
+
+
 class Handler(BaseHTTPRequestHandler):
     def _send(self, status: int, body: bytes, headers: dict[str, str] | None = None) -> None:
         self.send_response(status)
@@ -300,6 +335,10 @@ class Handler(BaseHTTPRequestHandler):
         }, ensure_ascii=False).encode(), GATE.settlement_headers(settlement)
 
     def do_GET(self) -> None:  # noqa: N802
+        if self.path.rstrip("/") == "/privacy":
+            self._send(200, _PRIVACY_HTML.encode("utf-8"),
+                       {"Content-Type": "text/html; charset=utf-8"})
+            return
         if self.path.rstrip("/") == HEALTH_PATH:
             self._send(200, json.dumps(
                 {"status": "ok", "service": "drift", "version": __version__},
