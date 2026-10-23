@@ -12,6 +12,7 @@ import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from mcp_server import TOOLS, respond
+import subscription
 from ratelimit import DAY_SECONDS, RateLimiter, client_key
 from x402_gate import (
     HEADER_PAYMENT,
@@ -91,9 +92,13 @@ def log(message: str) -> None:
     sys.stderr.write(f"drift: {message}\n")
     sys.stderr.flush()
 GATE: X402Gate | None = None  # создаётся в main(); None = только бесплатный тариф
+# Отдельный гейт для подписки: своя цена и свой ресурс. Nonce у них
+# общий (один state-файл), поэтому платёж нельзя предъявить дважды.
+SUB_GATE: X402Gate | None = None
 LIMITER: RateLimiter | None = None  # создаётся в main(); None = без лимита
 __version__ = "0.1.0"
 HEALTH_PATH = "/health"
+SUBSCRIBE_PATH = "/subscribe"
 
 
 LANDING = """<!doctype html><html lang="en"><head><meta charset=utf-8>
@@ -144,7 +149,9 @@ stops the flow itself.</p>
 <h2>Price</h2>
 <div class="card">
 <p style="margin:0">100 free checks per day. Then 0.005 USDC per call on
-Base mainnet over x402. No account, no card, no SDK.</p>
+Base mainnet over x402. Or 9 USDC for 30 days without the daily cap
+(<code>POST /subscribe</code>, paid once, same wallet). No account, no card,
+no SDK.</p>
 </div>
 
 <h2>Try before you install</h2>
@@ -229,6 +236,9 @@ class Handler(BaseHTTPRequestHandler):
                 {"status": "ok", "service": "drift", "version": __version__},
                 ensure_ascii=False).encode())
             return
+        if self.path.split("?")[0].rstrip("/") == SUBSCRIBE_PATH:
+            self._subscribe()
+            return
         if self.path.rstrip("/") not in (MCP_PATH, ""):
             self._send(404, b'{"error":"not found"}')
             return
@@ -260,6 +270,19 @@ class Handler(BaseHTTPRequestHandler):
             return
         raw = self.rfile.read(n)
         if _is_free_method(raw):
+            out = respond(raw)
+            if out is None:
+                self._send(202, b"")
+                return
+            status, body = out
+            self._send(status, body)
+            return
+
+        # Подписка снимает дневной потолок: платёж был один, а не за вызов.
+        # Проверяем до списания квоты, иначе оплативший упрётся в тот же
+        # барьер, что и анонимный клиент.
+        entitlement = subscription.verify(self.headers.get(subscription.HEADER))
+        if entitlement is not None:
             out = respond(raw)
             if out is None:
                 self._send(202, b"")
@@ -303,6 +326,66 @@ class Handler(BaseHTTPRequestHandler):
             return
         status, body = out
         self._send(status, body, decision.headers() if LIMITER is not None else None)
+
+    def _subscribe(self) -> None:
+        """Купить 30 дней без потолка одним платежом (x402, 9 USDC).
+
+        Без заголовка оплаты отвечаем 402 с чеком; с заголовком — проверяем
+        и выдаём подписанный токен. Токен дальше живёт в
+        X-DRIFT-ENTITLEMENT и снимает дневную квоту.
+        """
+        if SUB_GATE is None or not subscription.enabled():
+            self._send(503, json.dumps({
+                "error": "subscription_unavailable",
+                "message": ("This deployment sells per-call access only: "
+                            "the subscription needs a wallet and a signing secret."),
+            }, ensure_ascii=False).encode())
+            return
+        payment = next((self.headers.get(h) for h in PAYMENT_HEADERS
+                        if self.headers.get(h)), None)
+        if not payment:
+            nonce = SUB_GATE.issue_nonce()
+            self._send(402, json.dumps({
+                "error": "payment_required",
+                "subscription": subscription.describe(),
+                "message": (f"Pay {subscription.PRICE_USDC} USDC on "
+                            f"{SUB_GATE.config.network} for 30 days without the "
+                            f"daily cap, then retry with the same header."),
+            }, ensure_ascii=False).encode(),
+                challenge_headers(SUB_GATE.config, nonce,
+                                  {"name": "subscribe", "description": "30 days"}))
+            return
+        try:
+            settlement = SUB_GATE.verify(payment, SUB_GATE.config.resource)
+        except FacilitatorUnreachable as exc:
+            self._send(503, json.dumps({
+                "error": "verification_unavailable",
+                "reason": str(exc),
+                "message": "The payment could not be verified right now. Retry with "
+                           "the same payment; it has not been rejected.",
+            }, ensure_ascii=False).encode(), {"Retry-After": "30"})
+            return
+        except ValueError as exc:
+            nonce = SUB_GATE.issue_nonce()
+            self._send(402, json.dumps({
+                "error": "payment_rejected",
+                "reason": str(exc),
+            }, ensure_ascii=False).encode(),
+                challenge_headers(SUB_GATE.config, nonce,
+                                  {"name": "subscribe", "description": "30 days"}))
+            return
+        token = subscription.issue(subject=settlement.payer or "")
+        body = {
+            **subscription.describe(),
+            "paid": True,
+            "token": token,
+            "payer": settlement.payer,
+            "transaction": settlement.transaction_ref,
+            "message": (f"Send this token in the {subscription.HEADER} header "
+                        f"with every request for 30 days."),
+        }
+        self._send(200, json.dumps(body, ensure_ascii=False).encode(),
+                   {subscription.HEADER: token})
 
     def _settle(self, payment: str) -> tuple[int, bytes, dict[str, str] | None]:
         """Проверить оплату и, если она настоящая, отдать её квитанцию."""
@@ -382,7 +465,7 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def main() -> None:
-    global LIMITER, GATE
+    global LIMITER, GATE, SUB_GATE
     if os.environ.get(X402_ENABLED_ENV) == "1":
         pay_to = os.environ.get(X402_PAY_TO_ENV, "").strip()
         if not pay_to:
@@ -406,6 +489,15 @@ def main() -> None:
         if resource:
             kwargs["resource"] = resource
         GATE = X402Gate(PaymentConfig(**kwargs))
+        if subscription.enabled():
+            # Подписка продаётся на своём ресурсе и по своей цене, но через
+            # тот же гейт: иначе пришлось бы дублировать проверку платежа.
+            base = str(kwargs.get("resource") or "https://drift.rta.lat/mcp")
+            sub_resource = base.rsplit("/", 1)[0] + SUBSCRIBE_PATH
+            SUB_GATE = X402Gate(PaymentConfig(
+                **{**kwargs,
+                   "price": subscription.PRICE_USDC,
+                   "resource": sub_resource}))
     if os.environ.get(DISABLE_RATE_LIMIT_ENV) != "1":
         LIMITER = RateLimiter(limit=FREE_TIER_PER_DAY, window_seconds=DAY_SECONDS)
     args = sys.argv[1:]

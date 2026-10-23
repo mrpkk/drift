@@ -158,7 +158,8 @@ def socks5_proxy_handler(proxy: str) -> urllib.request.BaseHandler:
 def test_count() -> str:
     """Число тестов берётся запуском, а не из памяти: в публикацию уходит 145."""
     total = 0
-    for suite in ("test_drift", "test_mcp", "test_ratelimit", "test_x402_gate"):
+    for suite in ("test_drift", "test_mcp", "test_ratelimit", "test_subscription",
+                  "test_x402_gate"):
         path = ROOT / f"{suite}.py"
         if not path.exists():
             continue

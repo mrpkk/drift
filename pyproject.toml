@@ -18,4 +18,5 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 # Каждый модуль должен быть здесь: забытый модуль даёт пакет, который устанавливается,
 # но падает на import. Обнаружено установкой вне репозитория.
-py-modules = ["drift", "mcp_server", "http_server", "ratelimit", "x402_gate", "windmill_script"]
+py-modules = ["drift", "mcp_server", "http_server", "ratelimit", "subscription", "x402_gate",
+              "windmill_script"]
