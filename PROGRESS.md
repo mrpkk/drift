@@ -298,3 +298,10 @@
 - Компенсация за порядок чтения тела — `MAX_BODY_BYTES` (512 КБ) и ответ `413`: исчерпанный клиент больше не может заставить сервер принять тело произвольного размера.
 - `windmill_script` не был объявлен в `py-modules` — дистрибуция была неполной.
 - **181 тест зелёный**, коммит `c0bbfeb` (ветка master).
+
+- [x] **Glama: карточка drift есть, Healthy (24.10.2026).** Владелец подал через
+      «Hosted endpoint» (`https://drift.rta.lat/mcp`). Карточка
+      https://glama.ai/mcp/servers/@mrpkk/drift отвечает 200, статус Healthy, бейдж
+      `score.svg` отдаётся. Это снимает единственное замечание мейнтейнера в PR #16698
+      (`attest` + `drift`): «the Glama badge points to a server that hasn't been submitted».
+      Осталось: комментарий в PR — токен без прав, нужен владелец.
