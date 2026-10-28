@@ -23,7 +23,7 @@ import time
 from decimal import Decimal
 
 PLAN = "drift-unlimited-30d"
-PRICE_USDC = Decimal("9")
+PRICE_USDC = Decimal("99")
 DAYS = 30
 HEADER = "X-DRIFT-ENTITLEMENT"
 SECRET_ENV = "DRIFT_SUB_SECRET"

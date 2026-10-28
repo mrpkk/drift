@@ -149,7 +149,7 @@ stops the flow itself.</p>
 <h2>Price</h2>
 <div class="card">
 <p style="margin:0">100 free checks per day. Then 0.005 USDC per call on
-Base mainnet over x402. Or 9 USDC for 30 days without the daily cap
+Base mainnet over x402. Or 99 USDC for 30 days without the daily cap
 (<code>POST /subscribe</code>, paid once, same wallet). No account, no card,
 no SDK.</p>
 </div>
@@ -328,7 +328,7 @@ class Handler(BaseHTTPRequestHandler):
         self._send(status, body, decision.headers() if LIMITER is not None else None)
 
     def _subscribe(self) -> None:
-        """Купить 30 дней без потолка одним платежом (x402, 9 USDC).
+        """Купить 30 дней без потолка одним платежом (x402, 99 USDC).
 
         Без заголовка оплаты отвечаем 402 с чеком; с заголовком — проверяем
         и выдаём подписанный токен. Токен дальше живёт в
