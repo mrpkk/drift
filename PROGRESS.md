@@ -305,3 +305,15 @@
       `score.svg` отдаётся. Это снимает единственное замечание мейнтейнера в PR #16698
       (`attest` + `drift`): «the Glama badge points to a server that hasn't been submitted».
       Осталось: комментарий в PR — токен без прав, нужен владелец.
+
+## 28.10.2026 · Цена подписки: 9 → 99 USDC
+
+По стратегии монетизации attest стоит $99/мес. `drift` — слой того же движка и показывал 9 USDC:
+две страницы одного продукта называли разные цены.
+
+Изменено: `subscription.PRICE_USDC = 99`, две текстовые строки в `http_server.py`.
+Проверено: живые 189 тестов зелёные, `POST /subscribe` возвращает `price: "99"`, на странице
+`9 USDC` больше нет.
+
+Заодно восстановлен туннель: `rta-tunnel` (user) завис в `deactivating`, все домены отдавали **530**;
+после `systemctl --user restart rta-tunnel` — 200 на attest, rta.lat, drift.
