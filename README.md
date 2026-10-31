@@ -2,9 +2,12 @@
 
 [![M8ven Score](https://m8ven.ai/badge/mcp/mrpkk-drift-52f8ee?v=1efa9c1d58839ca73fb2be488b6f4816)](https://m8ven.ai/mcp/mrpkk-drift-52f8ee?s=readme)
 [![Listed on mcpservers.org](https://mcpservers.org/badge.svg)](https://mcpservers.org/servers/mrpkk/drift)
+[![mrpkk/drift MCP server](https://glama.ai/mcp/servers/mrpkk/drift/badges/score.svg)](https://glama.ai/mcp/servers/mrpkk/drift)
 
 **Continuous mandate enforcement for AI agents.** Every action is checked against the
 signed mandate *before* it happens, not once at signing.
+
+Live: **<https://drift.rta.lat>** · MCP endpoint: **<https://drift.rta.lat/mcp>**
 
 ```
 pip install drift          # or: pip install -e .
