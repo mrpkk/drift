@@ -140,6 +140,9 @@ class Drift:
             "payee_id": action.payee_id,
             "audience": action.audience,
             "amount_minor": action.amount_minor,
+            # Порог мандата в самой записи отказа: без него нельзя понять, чем
+            # именно сумма не прошла — лимитом, валютой или адресатом.
+            "max_amount_minor": self.m.max_amount_minor,
             "currency": action.currency,
         })
         return verdict, rule

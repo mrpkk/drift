@@ -36,6 +36,20 @@ class TestRules(unittest.TestCase):
     def test_amount_one_over_is_denied(self):
         self.assertEqual(check(mandate(), action(amount_minor=10_001))[0], "DENY")
 
+    def test_deny_record_carries_mandate_cap(self):
+        """В отказе видно и запрошенную сумму, и порог мандата.
+
+        Без `max_amount_minor` запись отвечала «rule: amount», но не говорила,
+        какой лимит нарушен — аудитор не может отличить мандат на 100 USD от
+        мандата на 100 000, если видит только сумму действия.
+        """
+        d = Drift(mandate())
+        verdict, rule = d.submit(action(amount_minor=10_001))
+        self.assertEqual((verdict, rule), ("DENY", "amount"))
+        record = d.ledger.denied()[0]
+        self.assertEqual(record["amount_minor"], 10_001)
+        self.assertEqual(record["max_amount_minor"], 10_000)
+
     def test_payee_mismatch(self):
         self.assertEqual(check(mandate(), action(payee_id="other"))[1], "payee")
 
