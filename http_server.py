@@ -112,7 +112,7 @@ LANDING = """<!doctype html><html lang="en"><head><meta charset=utf-8>
 "operatingSystem":"Any",
 "description":"MCP server enforcing mandates for AI agents: it blocks a call that was not permitted rather than returning a verdict the caller may forget to read.",
 "url":"https://drift.rta.lat/",
-"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
+"offers":{"@type":"Offer","price":"0.005","priceCurrency":"USD"}}
 </script>
 <style>
 :root{--bg:#0b0d12;--fg:#e8ecf4;--dim:#98a2b3;--line:#1e2430;--acc:#58a6ff;--ok:#3fb950}
