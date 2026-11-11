@@ -223,9 +223,15 @@ name. Counter aggregates can be reset on request.</p>
 class Handler(BaseHTTPRequestHandler):
     def _send(self, status: int, body: bytes, headers: dict[str, str] | None = None) -> None:
         self.send_response(status)
-        self.send_header("Content-Type", "application/json; charset=utf-8")
+        # Тип ответа — по умолчанию JSON, но переопределение из headers должно
+        # выигрывать. Раньше Content-Type ставился первым, а переопределение
+        # приходил вторым: браузер брал первый, и HTML-страница (главная drift)
+        # отображалась как исходник в <pre>. Заголовок не дублируем.
+        headers = dict(headers or {})
+        content_type = headers.pop("Content-Type", None) or headers.pop("X-Content-Type", None)
+        self.send_header("Content-Type", content_type or "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
-        for name, value in (headers or {}).items():
+        for name, value in headers.items():
             self.send_header(name, value)
         self.end_headers()
         self.wfile.write(body)
