@@ -75,3 +75,72 @@ def test_recipient_case_insensitive():
     lower = OURS.lower()
     res = scan_receipt(_receipt(_log()), lower, min_amount=79)
     assert res["ok"] is True, res
+
+
+# ── баланс, резервные RPC и заголовок ───────────────────────────────────────
+
+def test_balance_reads_hex_from_rpc(monkeypatch):
+    import check_usdc_payment as c
+    monkeypatch.setattr(c, "_rpc", lambda m, p: "0x" + hex(int(12.5 * 10**6))[2:])
+    assert c.usdc_balance(OURS) == 12.5
+
+
+def test_balance_rejects_bad_address():
+    import pytest
+    import check_usdc_payment as c
+    with pytest.raises(ValueError):
+        c.usdc_balance("0x123")
+
+
+def test_rpc_fails_over_to_next_endpoint(monkeypatch):
+    import check_usdc_payment as c
+    calls = []
+
+    def fake(url, method, params):
+        calls.append(url)
+        if len(calls) == 1:
+            raise RuntimeError("HTTP Error 429")
+        return {"ok": True}
+
+    monkeypatch.setattr(c, "_rpc_once", fake)
+    assert c._rpc("eth_blockNumber", []) == {"ok": True}
+    assert len(calls) == 2, calls
+
+
+def test_all_rpc_down_is_not_a_payment_verdict(monkeypatch):
+    """«Не проверили» не должно выглядеть как «перевода нет»."""
+    import pytest
+    import check_usdc_payment as c
+
+    def always_fail(url, method, params):
+        raise RuntimeError("HTTP Error 403")
+
+    monkeypatch.setattr(c, "_rpc_once", always_fail)
+    with pytest.raises(c.RpcUnavailable):
+        c._rpc("eth_getTransactionReceipt", ["0xabc"])
+
+
+def test_request_carries_user_agent(monkeypatch):
+    """Без User-Agent публичный RPC ответил 403 — 20.11.2026 это сломало проверку."""
+    import check_usdc_payment as c
+    captured = {}
+
+    class Resp:
+        def read(self):
+            return b'{"jsonrpc":"2.0","id":1,"result":"0x1"}'
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *a):
+            return False
+
+    def fake_urlopen(req, timeout=25):
+        captured["ua"] = req.get_header("User-agent")
+        captured["url"] = req.full_url
+        return Resp()
+
+    monkeypatch.setattr(c.urllib.request, "urlopen", fake_urlopen)
+    c._rpc_once(c.RPC_URLS[0], "eth_blockNumber", [])
+    assert captured["ua"] == c.USER_AGENT
+    assert "drift" in captured["ua"]
