@@ -57,3 +57,27 @@ def test_render_from_env_rewrites_address():
 def test_render_rejects_bad_address():
     with pytest.raises(ValueError):
         render(_html(), "0x123")
+
+
+def test_offer_has_price_markup_for_search():
+    """Без JSON-LD поисковик не покажет цену, а чат-клиент не поймёт, что это услуга."""
+    import json as _json
+    import re
+    html = _html()
+    m = re.search(r'<script type="application/ld\+json">(.*?)</script>', html, re.S)
+    assert m, "нет разметки JSON-LD"
+    data = _json.loads(m.group(1))
+    assert data["@type"] == "Service"
+    assert data["offers"]["price"] == "79" and data["offers"]["priceCurrency"] == "USD"
+    assert 'property="og:title"' in html and 'property="og:url"' in html
+
+
+def test_offer_is_in_domain_sitemap_after_publish():
+    """В репозитории лежит копия; карту сайта собирает rta.http_api — проверяем исходник."""
+    from pathlib import Path
+    api = Path("/media/Sruti/iamthat/work/sales/rta/rta/http_api.py")
+    if not api.exists():
+        import pytest
+        pytest.skip("нет модуля rta.http_api на этой машине")
+    text = api.read_text(encoding="utf-8")
+    assert "/drift-offer/" in text, "оффер не попал в карту сайта"
