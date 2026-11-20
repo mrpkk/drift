@@ -92,6 +92,32 @@ print(verdict, rule)   # DENY amount
 If an agent controls both `intent` and `amount`, it can lie in both. Closing that gap is
 `attest`'s job: attest proves afterwards, drift bounds beforehand. They are complements.
 
+## Buying the setup ($79)
+
+The code here is the engine. The **setup** — a hard per-task budget, a payee
+allowlist and a kill switch wired into your stack, tested on a dry run, with a
+runbook and a signed refusal receipt — is a paid job: **$79, 48 hours**.
+
+- Card: <https://nidhipati.ailegal.legal/pay/card?product=drift-kill-switch>
+- USDC on **Base**: address is on the offer page (<https://rta.lat/drift-offer/>) and in
+  `offer/index.html`; it is published from `~/.env` by `scripts/publish_offer.py`, so the
+  repository and the page cannot disagree for long.
+- After a transfer, send the transaction hash to maxim.pkk@gmail.com. The order starts when the
+  transfer is seen on-chain, not when the email arrives.
+
+### Checking a USDC payment
+
+`scripts/check_usdc_payment.py` reads the Base transaction receipt through a public RPC and looks
+for the USDC `Transfer` event into our address — the amount from a form or an email is not evidence.
+
+```bash
+python3 scripts/check_usdc_payment.py --tx 0x… --min 79
+```
+
+What it proves: the transfer exists, went to this address, in this token, for at least this amount.
+What it does not prove: that the sender was the buyer, that the transfer cannot be reversed, or that
+a second transfer will not arrive later. Two transfers add up; call it once per hash.
+
 ## Use it from your agent
 
 ```json
