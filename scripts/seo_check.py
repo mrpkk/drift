@@ -53,6 +53,12 @@ def check() -> list[tuple[bool, str]]:
     status, robots = fetch("https://rta.lat/robots.txt")
     rows.append((status == 200 and "sitemap.xml" in robots.lower(),
                  "robots.txt указывает на карту сайта"))
+
+    # llms.txt — то, из чего AI-клиенты берут описание домена. Если оффера там нет,
+    # модель о нём не расскажет, сколько бы мы ни правили страницу.
+    status, llms = fetch("https://rta.lat/llms.txt")
+    rows.append((status == 200 and "/drift-offer/" in llms and "79" in llms,
+                 "llms.txt домена называет оффер и цену"))
     return rows
 
 

@@ -81,3 +81,15 @@ def test_offer_is_in_domain_sitemap_after_publish():
         pytest.skip("нет модуля rta.http_api на этой машине")
     text = api.read_text(encoding="utf-8")
     assert "/drift-offer/" in text, "оффер не попал в карту сайта"
+
+
+def test_offer_is_named_in_domain_llms_txt():
+    """llms.txt читают AI-клиенты: оффер без записи там не существует для модели."""
+    from pathlib import Path
+    api = Path("/media/Sruti/iamthat/work/sales/rta/rta/http_api.py")
+    if not api.exists():
+        import pytest
+        pytest.skip("нет модуля rta.http_api на этой машине")
+    text = api.read_text(encoding="utf-8")
+    assert "/drift-offer/" in text, "оффер не назван в llms.txt домена"
+    assert "$79" in text, "цена не названа"
