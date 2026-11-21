@@ -27,7 +27,7 @@ def compose() -> dict:
 
 def test_compose_maps_the_same_port_the_server_exposes(compose):
     service = compose["services"]["drift"]
-    assert service["ports"] == ["127.0.0.1:8095:8095"]
+    assert service["ports"] == ["127.0.0.1:${DRIFT_PORT:-8095}:8095"]
     assert service["restart"] == "unless-stopped"
 
 
@@ -101,3 +101,32 @@ def test_server_starts_and_answers_health():
     finally:
         proc.terminate()
         proc.wait(timeout=10)
+
+
+def test_dockerfile_copies_every_local_module():
+    """Образ собирался, а контейнер падал: subscription.py не было в COPY.
+
+    22.11.2026: `docker compose up` → `ModuleNotFoundError: No module named
+    'subscription'`. Тест сверяет импорты с тем, что реально копируется в образ.
+    """
+    import re
+
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8").replace("\\\n", " ")
+    copy_block = " ".join(re.findall(r"^COPY (.+?) \./", dockerfile, re.MULTILINE))
+    local_modules = {p.stem for p in ROOT.glob("*.py") if not p.name.startswith("test_")}
+    imports = set()
+    for name in local_modules:
+        text = (ROOT / f"{name}.py").read_text(encoding="utf-8")
+        imports |= set(re.findall(r"^(?:import|from) ([a-z_][a-z0-9_]*)", text, re.MULTILINE))
+    needed = (imports & local_modules) - {"drift", "mcp_server", "http_server",
+                                          "ratelimit", "x402_gate", "subscription"}
+    missing = [m for m in sorted(local_modules) if m not in copy_block
+               and m in (imports | {"subscription"})]
+    assert not missing, f"Dockerfile не копирует: {missing} (нужно для {sorted(needed)})"
+
+
+def test_compose_port_can_be_overridden():
+    """Порт занят живым сервисом — проверять контейнер надо на другом порту."""
+    compose = yaml.safe_load((ROOT / "docker-compose.yml").read_text(encoding="utf-8"))
+    port = compose["services"]["drift"]["ports"][0]
+    assert "${DRIFT_PORT:-8095}" in port

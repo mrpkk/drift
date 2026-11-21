@@ -20,10 +20,16 @@ python3 -m drift.http_server --http 8080
 ```bash
 git clone https://github.com/mrpkk/drift && cd drift
 docker compose up -d --build
-curl -s http://127.0.0.1:8095/health          # {"ok": true, ...}
+curl -s http://127.0.0.1:8095/health          # {"status": "ok", ...}
 curl -s -X POST http://127.0.0.1:8095/mcp -H 'content-type: application/json' \
   -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
 ```
+
+Port already taken? `DRIFT_PORT=18095 docker compose up -d` — наружу по-прежнему только `127.0.0.1`.
+
+Проверено 22.11.2026 на чистой машине: `docker compose build` → `up -d` → контейнер
+`Up (healthy)`, `/health` → 200, `tools/list` → список инструментов. Образ запускается от
+пользователя `drift` (uid 10001), корневая ФС read-only, `no-new-privileges`.
 
 What you get by default:
 

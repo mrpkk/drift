@@ -7,7 +7,10 @@ FROM python:3.12-slim
 RUN useradd --system --create-home --uid 10001 drift
 WORKDIR /app
 
-COPY drift.py mcp_server.py http_server.py ratelimit.py x402_gate.py server.json ./
+# Полный список локальных модулей: раньше здесь не было subscription.py, и образ
+# собирался, но контейнер падал на старте (ModuleNotFoundError). Тест сверяет.
+COPY drift.py mcp_server.py http_server.py ratelimit.py x402_gate.py subscription.py \
+     server.json ./
 
 USER drift
 EXPOSE 8095

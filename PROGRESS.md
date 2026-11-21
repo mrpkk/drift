@@ -501,3 +501,40 @@ non-root и HEALTHCHECK; в README есть запускаемые команд�
 `tools/list` — в тесте и в гайде.
 
 **Осталось:** покупатель ($79 оффер). Технически self-host теперь воспроизводим по README.
+
+## 22.11.2026 — self-host: образ реально запущен, гайд не врёт
+
+**Что было сделано раньше:** `docker-compose.yml`, раздел README, `tests/test_selfhost.py`. Но образ
+**ни разу не запускался** — проверялся только entrypoint на хосте. Это и есть разница между «гайд
+написан» и «гайд работает».
+
+**Что нашли при первом настоящем запуске:** контейнер упал с
+`ModuleNotFoundError: No module named 'subscription'` — в `Dockerfile` не было `subscription.py` в
+`COPY`. Образ собирался успешно, поэтому ошибка вылезла только на `up`. Ровно тот класс отказа, когда
+«сборка зелёная» ничего не значит.
+
+**Исправлено:**
+- `Dockerfile` копирует все локальные модули (`subscription.py` добавлен);
+- `.dockerignore` — в образ больше не уезжают тесты, `.git`, бэкапы и архивы;
+- порт в compose стал настраиваемым: `DRIFT_PORT=18095 docker compose up -d` (нужно, когда 8095 занят);
+- `docs/SELFHOST-CHECK.md` — что именно проверено, чем и что не проверялось.
+
+**Проверено живьём (не на словах):**
+```
+docker compose build           → Image drift-mandate:local Built
+DRIFT_PORT=18095 compose up -d → drift Up 12 seconds (healthy)
+curl 127.0.0.1:18095/health    → 200 {"status":"ok","service":"drift","version":"0.1.0"}
+tools/list через /mcp          → список инструментов
+docker inspect: user=drift (uid 10001), read_only=true, no-new-privileges=true
+```
+Живой прод не тронут: `drift.rta.lat/health` — **200** (отдельный процесс на 8095).
+
+**Тесты:** `tests/test_selfhost.py` — 9 (в т.ч. новый: **Dockerfile копирует каждый локальный модуль**
+— сравнивает импорты с COPY; порт берётся из `DRIFT_PORT` с дефолтом 8095). Сюита — **219 passed**.
+
+**Сверка с рынком:** рекомендации 2026 по self-host контейнерам (r/selfhosted, примеры MCP-серверов)
+сходятся на `read-only` + `no-new-privileges` + non-root + healthcheck; отдельным пунктом — «проверяйте
+`compose up`, а не только `build`», потому что отсутствующий файл в COPY виден только при старте. Наш
+случай — точно этот.
+
+**Осталось:** покупатель ($79 оффер). Технически self-host воспроизводим и проверен запуском.
