@@ -14,6 +14,43 @@ pip install drift          # or: pip install -e .
 python3 -m drift.http_server --http 8080
 ```
 
+
+## Self-host in four commands
+
+```bash
+git clone https://github.com/mrpkk/drift && cd drift
+docker compose up -d --build
+curl -s http://127.0.0.1:8095/health          # {"ok": true, ...}
+curl -s -X POST http://127.0.0.1:8095/mcp -H 'content-type: application/json' \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
+```
+
+What you get by default:
+
+| | |
+|---|---|
+| Transport | HTTP on `127.0.0.1:8095` (не в интернете — публикация это ваше решение) |
+| Quota | 100 free checks per day (`DRIFT_FREE_TIER_PER_DAY`) |
+| Payment | off until `DRIFT_X402_ENABLED=1` and `DRIFT_X402_PAY_TO` are set |
+| State | named volume `drift-state` → `/data` (переживает перезапуск) |
+| Hardening | `read_only: true`, `no-new-privileges`, non-root user in the image |
+| Healthcheck | `GET /health` каждые 30 с (в образе и в compose) |
+
+Turn the paid rail on (optional):
+
+```bash
+DRIFT_X402_ENABLED=1 DRIFT_X402_PAY_TO=0xYourAddress docker compose up -d
+```
+
+Stdio mode stays available for local MCP clients:
+
+```bash
+docker run --rm -i drift-mandate:local python3 mcp_server.py
+```
+
+Nothing else is required: no database, no external service, no keys to fetch at build
+time. If the container is unhealthy, `docker compose logs drift` shows the reason.
+
 ## The gap
 
 An agent is granted a mandate: who to pay, how much, in which currency, until when.

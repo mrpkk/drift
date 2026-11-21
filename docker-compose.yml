@@ -1,0 +1,48 @@
+# drift — continuous mandate enforcement for AI agents.
+#
+# Один контейнер, без внешних зависимостей: сервер на стандартной библиотеке,
+# состояние — в томе. Поднимите и проверьте:
+#
+#   docker compose up -d --build
+#   curl -s http://127.0.0.1:8095/health
+#
+# Платный режим (x402) включается переменными ниже; без них сервер работает
+# бесплатно в пределах суточной квоты — это нормальный режим self-host.
+
+services:
+  drift:
+    build: .
+    image: drift-mandate:local
+    container_name: drift
+    restart: unless-stopped
+    ports:
+      # Только локально по умолчанию: наружу выставляйте осознанно (или через
+      # reverse-proxy с TLS). Публичный адрес — это уже ваша инфраструктура.
+      - "127.0.0.1:8095:8095"
+    environment:
+      # Квота бесплатных вызовов в сутки (по умолчанию 100).
+      DRIFT_FREE_TIER_PER_DAY: "${DRIFT_FREE_TIER_PER_DAY:-100}"
+      # Платный режим: выключен, пока не задан адрес получателя.
+      DRIFT_X402_ENABLED: "${DRIFT_X402_ENABLED:-0}"
+      DRIFT_X402_PAY_TO: "${DRIFT_X402_PAY_TO:-}"
+      DRIFT_X402_NETWORK: "${DRIFT_X402_NETWORK:-base}"
+      # Состояние (счётчики, квитанции) — в томе, переживает перезапуск.
+      DRIFT_STATE_DIR: "/data/a"
+    volumes:
+      - drift-state:/data
+    # Контейнеру нечего писать в корневую ФС: только том состояния.
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python3", "-c",
+             "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8095/health',timeout=4).status==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 5s
+      retries: 3
+
+volumes:
+  drift-state:
