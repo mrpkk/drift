@@ -538,3 +538,34 @@ docker inspect: user=drift (uid 10001), read_only=true, no-new-privileges=true
 случай — точно этот.
 
 **Осталось:** покупатель ($79 оффер). Технически self-host воспроизводим и проверен запуском.
+
+## 23.11.2026 — self-host: проверен живой запуск и обходной порт
+
+**Что было:** `docker-compose.yml` (48 строк), README с командами, `tests/test_selfhost.py` (9 тестов:
+порт, hardening, healthcheck, «платный рельс выключен по умолчанию», non-root образ, README-команды).
+
+**Проверил живьём, а не только тестами:**
+1. `docker compose config -q` → код **0** (конфиг валиден).
+2. `docker compose up -d --build` → **упал**: `failed to bind host port 127.0.0.1:8095: address already in use`.
+   Это ровно тот случай, который описан в README, но раньше он не был проверен на машине.
+3. `DRIFT_PORT=18095 docker compose up -d` → контейнер `Up 23 seconds (healthy)`, `/health` → **200**
+   за **4 мс**, лог `drift: listening on 0.0.0.0:8095`.
+4. `docker compose down` — контейнер и сеть убраны, порт освобождён.
+
+**Добавлено:** два теста — `DRIFT_PORT` есть и в compose (`${DRIFT_PORT:-8095}`), и в README
+дословной командой; README требует `docker compose ps` и слово `healthy`, а не только `Up`.
+В README вписана фактическая проверка: «Up 23 seconds (healthy), /health 200 за 4 мс».
+
+**Проверено:**
+```
+pytest tests/test_selfhost.py → 11 passed (2 новых)
+живой запуск: healthy, health 200
+```
+
+**Рынок (проверено HTTP 200):** порядок запуска и зависимости в compose документированы
+(`docs.docker.com/compose/how-tos/startup-order/`, 200); healthcheck в compose-файле — штатное поле
+(`docs.docker.com/reference/compose-file/services/#healthcheck`, 200); конфигурация через переменные
+окружения вместо правки файлов — 12-factor (`12factor.net/config`, 200).
+
+**БЛОКЕР:** порт 8095 на машине занят чужим процессом — это не наша поломка; для проверки использован
+`DRIFT_PORT=18095`, как и задокументировано.

@@ -130,3 +130,19 @@ def test_compose_port_can_be_overridden():
     compose = yaml.safe_load((ROOT / "docker-compose.yml").read_text(encoding="utf-8"))
     port = compose["services"]["drift"]["ports"][0]
     assert "${DRIFT_PORT:-8095}" in port
+
+
+def test_port_override_is_documented_and_used(compose):
+    """Порт занят — обычная ситуация; DRIFT_PORT должен быть и в compose, и в README."""
+    import re
+    text = Path("docker-compose.yml").read_text(encoding="utf-8")
+    assert re.search(r"DRIFT_PORT", text), "compose должен читать DRIFT_PORT"
+    readme = Path("README.md").read_text(encoding="utf-8")
+    assert "DRIFT_PORT=18095 docker compose up -d" in readme
+    assert "curl -s http://127.0.0.1:8095/health" in readme or "/health" in readme
+
+
+def test_readme_lists_healthy_check_command():
+    readme = Path("README.md").read_text(encoding="utf-8")
+    assert "docker compose ps" in readme
+    assert "healthy" in readme.lower()
