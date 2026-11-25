@@ -146,3 +146,27 @@ def test_readme_lists_healthy_check_command():
     readme = Path("README.md").read_text(encoding="utf-8")
     assert "docker compose ps" in readme
     assert "healthy" in readme.lower()
+
+
+def test_documented_state_is_exactly_what_the_code_persists(compose):
+    """Том не должен обещать больше, чем хранит: в коде пишется только payments.json."""
+    src = (ROOT / "http_server.py").read_text(encoding="utf-8")
+    assert '"payments.json"' in src
+    assert "state_dir" in src
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    assert "payments.json" in readme
+    assert "reset on restart" in readme, "обнуление счётчиков должно быть названо, а не скрыто"
+    raw = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+    assert "Счётчики бесплатной квоты и сессии живут в памяти" in raw
+
+
+def test_compose_config_is_valid():
+    """`docker compose config -q` — единственный способ узнать, что файл не сломан."""
+    import shutil
+    import subprocess
+
+    if not shutil.which("docker"):
+        pytest.skip("docker не установлен")
+    proc = subprocess.run(["docker", "compose", "config", "-q"], cwd=ROOT,
+                          capture_output=True, text=True, timeout=60)
+    assert proc.returncode == 0, proc.stderr[-300:]

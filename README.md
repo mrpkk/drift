@@ -40,7 +40,7 @@ What you get by default:
 | Transport | HTTP on `127.0.0.1:8095` (не в интернете — публикация это ваше решение) |
 | Quota | 100 free checks per day (`DRIFT_FREE_TIER_PER_DAY`) |
 | Payment | off until `DRIFT_X402_ENABLED=1` and `DRIFT_X402_PAY_TO` are set |
-| State | named volume `drift-state` → `/data` (переживает перезапуск) |
+| State | volume `drift-state` → `/data`; persists `/data/a/payments.json` (payment journal). Free-tier counters and sessions are in memory and reset on restart |
 | Hardening | `read_only: true`, `no-new-privileges`, non-root user in the image |
 | Healthcheck | `GET /health` каждые 30 с (в образе и в compose) |
 

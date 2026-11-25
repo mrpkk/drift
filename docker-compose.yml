@@ -26,7 +26,9 @@ services:
       DRIFT_X402_ENABLED: "${DRIFT_X402_ENABLED:-0}"
       DRIFT_X402_PAY_TO: "${DRIFT_X402_PAY_TO:-}"
       DRIFT_X402_NETWORK: "${DRIFT_X402_NETWORK:-base}"
-      # Состояние (счётчики, квитанции) — в томе, переживает перезапуск.
+      # Что действительно переживает перезапуск: журнал платежей x402 (payments.json).
+      # Счётчики бесплатной квоты и сессии живут в памяти процесса и обнуляются —
+      # так и написано в README, чтобы том не обещал больше, чем хранит (26.11.2026).
       DRIFT_STATE_DIR: "/data/a"
     volumes:
       - drift-state:/data
