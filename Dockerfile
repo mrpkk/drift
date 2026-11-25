@@ -11,8 +11,12 @@ WORKDIR /app
 # собирался, но контейнер падал на старте (ModuleNotFoundError). Тест сверяет.
 COPY drift.py mcp_server.py http_server.py ratelimit.py x402_gate.py subscription.py \
      server.json ./
+COPY entrypoint.sh ./
 
-USER drift
+# Не USER drift: контейнер стартует root'ом ровно на один шаг — отдать том состояния
+# пользователю 10001 — и сразу сбрасывает привилегии в entrypoint.sh. Иначе том root:root
+# и запись журнала платежей падает с Permission denied (26.11.2026).
+ENTRYPOINT ["/app/entrypoint.sh"]
 EXPOSE 8095
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 \

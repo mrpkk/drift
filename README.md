@@ -15,6 +15,19 @@ python3 -m drift.http_server --http 8080
 ```
 
 
+## Permissions and the state volume
+
+The container starts as root for exactly one step: it creates the state directory and hands it to
+user `10001`, then drops privileges with `setpriv`. The application itself never runs as root
+(`/proc/1/status` → `Uid: 10001`). Without that step a named volume is mounted `root:root` and the
+first paid call fails with `Permission denied` when writing the payment journal — verified and fixed
+on 26.11.2026. Check the result yourself:
+
+```
+docker compose exec drift cat /proc/1/status | grep Uid      # 10001
+docker compose exec drift ls -ld /data/a                     # owned by 10001
+```
+
 ## Self-host in four commands
 
 ```bash

@@ -54,8 +54,16 @@ def test_paid_rail_is_off_by_default(compose):
 
 
 def test_image_is_non_root_with_healthcheck():
+    """Приложение не должно работать под root — но способ изменился 26.11.2026.
+
+    `USER drift` не позволял отдать том состояния пользователю 10001 (том монтируется root:root).
+    Теперь контейнер стартует root'ом на один шаг и сразу сбрасывает привилегии в entrypoint.
+    Проверяем именно результат: приложение не под root.
+    """
     dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
-    assert re.search(r"^USER (?!root)\w+", dockerfile, re.MULTILINE)
+    drops = bool(re.search(r"^USER (?!root)\w+", dockerfile, re.MULTILINE))
+    entrypoint = "setpriv --reuid=10001" in (ROOT / "entrypoint.sh").read_text(encoding="utf-8")
+    assert drops or entrypoint, "приложение осталось бы под root"
     assert "HEALTHCHECK" in dockerfile and "/health" in dockerfile
 
 
@@ -170,3 +178,16 @@ def test_compose_config_is_valid():
     proc = subprocess.run(["docker", "compose", "config", "-q"], cwd=ROOT,
                           capture_output=True, text=True, timeout=60)
     assert proc.returncode == 0, proc.stderr[-300:]
+
+
+def test_entrypoint_fixes_volume_then_drops_privileges():
+    """Том принадлежит root — приложение должно получить его, но не работать под root."""
+    ep = (ROOT / "entrypoint.sh").read_text(encoding="utf-8")
+    assert "setpriv" in ep and "--reuid=10001" in ep, "привилегии должны сбрасываться"
+    assert "chown -R 10001:10001" in ep, "каталог состояния передаётся пользователю 10001"
+    assert "DRIFT_STATE_DIR" in ep
+    dockerfile = (ROOT / "Dockerfile").read_text(encoding="utf-8")
+    assert 'ENTRYPOINT ["/app/entrypoint.sh"]' in dockerfile
+    import re as _re
+    assert not _re.search(r"^USER drift", dockerfile, _re.MULTILINE), "root нужен только на шаг chown"
+    assert "COPY entrypoint.sh" in dockerfile
