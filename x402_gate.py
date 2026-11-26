@@ -213,6 +213,15 @@ def from_atoms(atoms: int) -> Decimal:
     return (Decimal(atoms) / (Decimal(10) ** USDC_DECIMALS)).normalize()
 
 
+#: Человеческие имена → CAIP-2. Документация и compose используют короткие имена.
+NETWORK_ALIASES = {
+    "base": "eip155:8453",
+    "base-mainnet": "eip155:8453",
+    "base-sepolia": "eip155:84532",
+    "sepolia": "eip155:84532",
+}
+
+
 @dataclass(frozen=True)
 class PaymentConfig:
     """What this deployment demands and who it trusts to verify payments."""
@@ -232,6 +241,13 @@ class PaymentConfig:
     version: int = X402_VERSION
 
     def __post_init__(self) -> None:
+        # 26.11.2026: compose и README обещали DRIFT_X402_NETWORK=base, а здесь принимаются
+        # только CAIP-2 идентификаторы — контейнер с включённым x402 падал в рестарт-цикл.
+        # Алиасы только для v2 (CAIP-2). В v1 facilitator ждёт буквальное «base-sepolia»,
+        # и подмена ломала запуск (26.11.2026: рестарт-цикл контейнера).
+        alias = NETWORK_ALIASES.get(str(self.network).strip().lower())
+        if alias and self.version >= 2:
+            object.__setattr__(self, "network", alias)
         if self.version >= 2 and not re.match(r"^https?://", self.resource):
             # Каталог PayAI отбрасывает относительные и чужие схемы
             # (resource_url_invalid / resource_scheme_not_allowed) — ресурс

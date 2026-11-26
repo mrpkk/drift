@@ -61,6 +61,9 @@ Turn the paid rail on (optional):
 
 ```bash
 DRIFT_X402_ENABLED=1 DRIFT_X402_PAY_TO=0xYourAddress docker compose up -d
+# default is Base Sepolia: the bundled facilitator (x402.org) does not serve mainnet.
+# For real money set both:
+#   DRIFT_X402_NETWORK=eip155:8453 DRIFT_X402_FACILITATOR=<mainnet facilitator> DRIFT_X402_ENABLED=1
 ```
 
 Stdio mode stays available for local MCP clients:

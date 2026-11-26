@@ -25,7 +25,10 @@ services:
       # Платный режим: выключен, пока не задан адрес получателя.
       DRIFT_X402_ENABLED: "${DRIFT_X402_ENABLED:-0}"
       DRIFT_X402_PAY_TO: "${DRIFT_X402_PAY_TO:-}"
-      DRIFT_X402_NETWORK: "${DRIFT_X402_NETWORK:-base}"
+      # 26.11.2026: с дефолтным facilitator (x402.org) mainnet Base не обслуживается — контейнер падал
+      # в рестарт-цикл. Поэтому дефолт — base-sepolia (тестовая сеть). Для настоящих денег нужен
+      # DRIFT_X402_NETWORK=eip155:8453 И DRIFT_X402_FACILITATOR=<mainnet-фасилитатор>.
+      DRIFT_X402_NETWORK: "${DRIFT_X402_NETWORK:-base-sepolia}"
       # Что действительно переживает перезапуск: журнал платежей x402 (payments.json).
       # Счётчики бесплатной квоты и сессии живут в памяти процесса и обнуляются —
       # так и написано в README, чтобы том не обещал больше, чем хранит (26.11.2026).

@@ -191,3 +191,44 @@ def test_entrypoint_fixes_volume_then_drops_privileges():
     import re as _re
     assert not _re.search(r"^USER drift", dockerfile, _re.MULTILINE), "root нужен только на шаг chown"
     assert "COPY entrypoint.sh" in dockerfile
+
+
+def test_payment_state_survives_and_reports_unwritable_path(tmp_path, capsys):
+    """Журнал платежей: пишется и читается; при недоступном пути говорит об этом, а не молчит."""
+    import sys as _sys
+
+    _sys.path.insert(0, str(ROOT))
+    from x402_gate import PaymentConfig, X402Gate
+
+    state = tmp_path / "a" / "payments.json"
+    cfg = PaymentConfig(pay_to="0x" + "ab" * 20, state_path=str(state))
+    gate = X402Gate(cfg)
+    gate._issued["nonce-1"] = {"amount": 5000}
+    gate._save_state(force=True)
+    assert state.is_file(), "журнал не создан"
+    again = X402Gate(cfg)
+    assert "nonce-1" in again._issued, "журнал не прочитан после перезапуска"
+
+    ro = tmp_path / "ro"
+    ro.mkdir()
+    ro.chmod(0o500)
+    bad = X402Gate(PaymentConfig(pay_to="0x" + "ab" * 20,
+                                 state_path=str(ro / "sub" / "payments.json")))
+    bad._save_state(force=True)
+    assert "не сохранено" in capsys.readouterr().out
+
+
+def test_x402_network_aliases_do_not_break_v1():
+    """`base` в документации и `base-sepolia` у facilitator'а — не одно и то же (26.11.2026)."""
+    import sys as _sys
+
+    _sys.path.insert(0, str(ROOT))
+    from x402_gate import PaymentConfig
+
+    assert PaymentConfig(pay_to="0x" + "ab" * 20, network="base-sepolia").network == "base-sepolia"
+    # v2 + mainnet требует своего facilitator'а (встроенный обслуживает только сеполню),
+    # поэтому проверяем именно нормализацию имени, а не полную валидность конфигурации.
+    from x402_gate import NETWORK_ALIASES
+    assert NETWORK_ALIASES["base"] == "eip155:8453"
+    compose = (ROOT / "docker-compose.yml").read_text(encoding="utf-8")
+    assert 'DRIFT_X402_NETWORK:-base-sepolia' in compose, "дефолт должен работать с встроенным facilitator"
